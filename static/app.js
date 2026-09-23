@@ -3,6 +3,7 @@ const interviewScreen = document.getElementById("interview-screen");
 const resultScreen = document.getElementById("result-screen");
 const chat = document.getElementById("chat");
 const question = document.getElementById("question");
+const submitButton = document.querySelector("#question-form button[type='submit']");
 
 function show(screen) {
   [startScreen, interviewScreen, resultScreen].forEach(s => s.classList.add("hidden"));
@@ -11,7 +12,7 @@ function show(screen) {
 
 function addMessage(role, text) {
   const div = document.createElement("div");
-  div.className = `message ${role}`;
+  div.className = "message " + role;
   div.textContent = text;
   chat.appendChild(div);
   chat.scrollTop = chat.scrollHeight;
@@ -30,36 +31,66 @@ document.getElementById("question-form").addEventListener("submit", async (e) =>
   e.preventDefault();
   const text = question.value.trim();
   if (!text) return;
+
   addMessage("user", text);
   question.value = "";
-  const res = await fetch("/api/message", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ text })
-  });
-  const data = await res.json();
-  addMessage("assistant", data.message || "No pude responder esa pregunta.");
-  question.focus();
+  question.disabled = true;
+  submitButton.disabled = true;
+  submitButton.textContent = "Pensando...";
+
+  try {
+    const res = await fetch("/api/message", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      addMessage("system", data.detail || "No fue posible contactar al entrevistado.");
+      return;
+    }
+
+    addMessage("assistant", data.message);
+  } catch (error) {
+    addMessage("system", "No fue posible conectar con el servidor del simulador.");
+  } finally {
+    question.disabled = false;
+    submitButton.disabled = false;
+    submitButton.textContent = "Enviar";
+    question.focus();
+  }
 });
 
 document.getElementById("end-btn").addEventListener("click", async () => {
   const res = await fetch("/api/end", { method: "POST" });
   const data = await res.json();
-  document.getElementById("coverage").textContent = `${data.coverage}%`;
+
+  document.getElementById("coverage").textContent = data.coverage + "%";
   document.getElementById("questions").textContent = data.questions;
-  document.getElementById("findings").textContent = `${data.discovered_count}/${data.total}`;
+  document.getElementById("findings").textContent = data.discovered_count + "/" + data.total;
+
   const discoveries = document.getElementById("discoveries");
   discoveries.innerHTML = "";
   data.items.forEach(item => {
     const row = document.createElement("div");
-    row.className = `discovery ${item.discovered ? "ok" : "miss"}`;
-    row.innerHTML = `<span>${item.discovered ? "✓" : "○"}</span><span>${item.description}</span>`;
+    row.className = "discovery " + (item.discovered ? "ok" : "miss");
+    row.innerHTML = "<span>" + (item.discovered ? "✓" : "○") + "</span><span>" + item.description + "</span>";
     discoveries.appendChild(row);
   });
+
   const feedback = document.getElementById("feedback");
   feedback.innerHTML = "";
-  data.feedback.forEach(text => { const li = document.createElement("li"); li.textContent = text; feedback.appendChild(li); });
+  data.feedback.forEach(text => {
+    const li = document.createElement("li");
+    li.textContent = text;
+    feedback.appendChild(li);
+  });
+
   show(resultScreen);
 });
 
-document.getElementById("restart-btn").addEventListener("click", () => show(startScreen));
+document.getElementById("restart-btn").addEventListener("click", () => {
+  show(startScreen);
+});
