@@ -1,0 +1,32 @@
+{
+  "criterios": [
+    {
+      "id": "preguntas_abiertas",
+      "nombre": "Formula preguntas abiertas y exploratorias"
+    },
+    {
+      "id": "repregunta",
+      "nombre": "Profundiza sobre información relevante"
+    },
+    {
+      "id": "procesos",
+      "nombre": "Identifica actividades y secuencia del proceso"
+    },
+    {
+      "id": "datos",
+      "nombre": "Identifica registros, documentos o datos utilizados"
+    },
+    {
+      "id": "problemas",
+      "nombre": "Identifica dificultades reales sin imponer una solución"
+    },
+    {
+      "id": "excepciones",
+      "nombre": "Explora excepciones o situaciones no habituales"
+    },
+    {
+      "id": "cierre",
+      "nombre": "Cierra o valida lo comprendido"
+    }
+  ]
+}
