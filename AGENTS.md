@@ -22,6 +22,8 @@ El estudiante debe entrevistar personajes simulados, descubrir información rele
 - Backend: Python + FastAPI.
 - Frontend: HTML, CSS y JavaScript.
 - Casos y personajes: JSON.
+- Objetivos pedagógicos: `config/pedagogia.json`.
+- Configuración de cada simulación: archivo de simulación del caso.
 - Desarrollo local mediante `.venv`.
 
 ## Reglas pedagógicas
@@ -36,6 +38,8 @@ El estudiante debe entrevistar personajes simulados, descubrir información rele
 - El estudiante debe descubrir información mediante preguntas y repreguntas.
 - El evaluador debe estar separado del entrevistado.
 - La evaluación se realiza después de finalizar la entrevista.
+- Los objetivos pedagógicos no se definen en AGENTS.md; deben mantenerse en la configuración pedagógica para que puedan ser seleccionados por el docente.
+- La evaluación debe basarse en evidencia de la transcripción y en los objetivos seleccionados para esa simulación.
 
 ## Seguridad
 
@@ -53,5 +57,5 @@ Antes de considerar terminada una modificación:
 3. Comenzar una entrevista.
 4. Realizar varias preguntas.
 5. Finalizar la entrevista.
-6. Verificar que aparece la retroalimentación.
+6. Verificar que aparece la evaluación por objetivos.
 7. Confirmar que no hay errores visibles.
