@@ -16,6 +16,7 @@ p { line-height: 1.55; }
 .avatar { width: 58px; height: 58px; border-radius: 50%; display: grid; place-items: center; background: #e9eef7; font-weight: 800; }
 .instruction { background: #f7f8fa; padding: 16px; border-radius: 12px; }
 button { border: 0; border-radius: 10px; min-height: 44px; padding: 10px 16px; font-size: 1rem; cursor: pointer; }
+button:disabled { cursor: wait; opacity: .65; }
 .primary { background: #253858; color: white; }
 .secondary { background: #edf0f3; color: #1c2430; }
 .interview-head { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; flex-wrap: wrap; }
@@ -23,6 +24,7 @@ button { border: 0; border-radius: 10px; min-height: 44px; padding: 10px 16px; f
 .message { max-width: 78%; padding: 11px 14px; margin: 10px 0; border-radius: 14px; line-height: 1.45; }
 .assistant { background: #e8edf4; margin-right: auto; }
 .user { background: #253858; color: white; margin-left: auto; }
+.system { background: #fff4d9; border: 1px solid #ead59b; color: #51451f; margin: 10px auto; max-width: 92%; }
 .composer label { display: block; font-weight: 700; margin-bottom: 8px; }
 .input-row { display: grid; grid-template-columns: 1fr auto; gap: 10px; }
 input { width: 100%; min-height: 46px; border: 1px solid #cbd2da; border-radius: 10px; padding: 10px 12px; font-size: 1rem; }
