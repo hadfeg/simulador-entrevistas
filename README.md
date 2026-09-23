@@ -4,52 +4,86 @@ Prototipo educativo para entrenar a estudiantes en entrevistas de levantamiento 
 
 ## Estado actual
 
-Rama de desarrollo: **v0.2 · entrevistado con IA**.
+Rama de desarrollo: **v0.3 · modelo pedagógico y evaluador IA**.
 
-Esta versión:
-- presenta el caso RetailNova;
-- incluye a Carolina Morales, Encargada de Bodega;
-- permite realizar la entrevista por texto;
-- usa IA para comprender lenguaje natural y mantener contexto;
-- controla el comportamiento mediante la ficha JSON del personaje;
-- conserva una detección de hallazgos provisional;
-- todavía no incorpora el evaluador con IA, voz ni realidad virtual.
+La aplicación separa tres responsabilidades:
+
+1. El **entrevistado IA** interpreta al personaje y conversa con el estudiante.
+2. La **configuración pedagógica** define qué competencias pueden entrenarse y cuáles se evalúan en cada simulación.
+3. El **evaluador IA** analiza la transcripción únicamente después de finalizar la entrevista.
+
+## Modelo pedagógico
+
+El objetivo general y el catálogo de objetivos están en:
+
+`config/pedagogia.json`
+
+El catálogo inicial incluye objetivos relacionados con apertura, preguntas abiertas, continuidad de la indagación, escucha activa, repreguntas, actores, procesos, datos y sistemas, reglas de negocio, problemas, excepciones, neutralidad, validación y cierre.
+
+La simulación actual está definida en:
+
+`casos/retailnova/simulacion_bodega.json`
+
+Ese archivo selecciona qué objetivos del catálogo se evaluarán en la entrevista con Carolina. En una etapa posterior, el panel docente permitirá realizar esta selección desde la interfaz.
+
+## Escala de logro
+
+Cada objetivo se evalúa usando cuatro niveles:
+
+- No evidenciado.
+- En desarrollo.
+- Logrado.
+- Destacado.
+
+El evaluador debe justificar el nivel con evidencia de la transcripción y proponer una acción concreta de mejora.
 
 ## Arquitectura
 
 - Backend: Python + FastAPI.
-- Entrevistado IA: OpenAI Responses API.
+- Entrevistado IA: `app/interviewer.py`.
+- Evaluador IA: `app/evaluator.py`.
+- Catálogo pedagógico: `config/pedagogia.json`.
+- Configuración de la entrevista: `casos/retailnova/simulacion_bodega.json`.
 - Frontend: HTML, CSS y JavaScript.
 - Casos y personajes: JSON.
 - Entorno local: `.venv`.
 
 ## Configuración local
 
-1. Tener Python instalado.
-2. Copiar `.env.example` como `.env`.
-3. Completar en `.env`:
+Copiar `.env.example` como `.env` y completar:
 
 ```text
 OPENAI_API_KEY=tu_clave
 OPENAI_MODEL=gpt-5.6-luna
+OPENAI_EVALUATOR_MODEL=gpt-5.6-luna
 ```
 
-4. Ejecutar `run.bat`.
-5. Abrir `http://127.0.0.1:8000`.
+Luego ejecutar:
 
-`run.bat` crea un entorno virtual `.venv` para mantener aisladas las dependencias.
+```text
+run.bat
+```
 
-## Seguridad
+y abrir:
 
-El archivo `.env` está excluido por `.gitignore`. Nunca se debe subir una clave de API al repositorio.
+`http://127.0.0.1:8000`
 
-## Alcance del Hito 2
+## Principio de evaluación
 
-El objetivo de esta versión es validar que Carolina:
-- mantenga el contexto de la conversación;
-- entienda repreguntas como “¿dónde lo registran?”, “¿quién hace eso?” o “¿por qué?”;
-- responda de forma natural;
-- no revele todos los hallazgos de inmediato;
-- no actúe como tutora ni evaluadora.
+El sistema no evalúa solo si el estudiante consiguió una palabra o hallazgo.
 
-La evaluación automática inteligente corresponde al siguiente hito.
+Por ejemplo, que Carolina mencione Excel no demuestra por sí mismo que el estudiante haya realizado una buena entrevista. El evaluador analiza la acción del estudiante que produjo, profundizó o validó esa información.
+
+## Alcance del Hito 3
+
+Esta versión permite validar que:
+
+- existe un objetivo general independiente del personaje;
+- los objetivos específicos provienen de un catálogo reutilizable;
+- una simulación selecciona cuáles objetivos evaluar;
+- Carolina sigue siendo únicamente entrevistada;
+- el evaluador es un agente separado;
+- la evaluación usa evidencia de la transcripción;
+- cada objetivo recibe nivel, evidencia, justificación y sugerencia de mejora.
+
+Todavía no incluye login, panel docente, persistencia de estudiantes, voz ni realidad virtual.
