@@ -1,0 +1,94 @@
+{
+  "id": "bodega",
+  "nombre": "Carolina Morales",
+  "cargo": "Encargada de Bodega",
+  "empresa": "RetailNova",
+  "personalidad": [
+    "Amable pero ocupada.",
+    "Responde lo que se le pregunta.",
+    "No entrega espontáneamente todos los detalles.",
+    "Usa lenguaje cotidiano y no técnico."
+  ],
+  "conoce": [
+    "Recepción de mercadería",
+    "Registro temporal de recepciones",
+    "Actualización de inventario",
+    "Preparación de pedidos",
+    "Devoluciones",
+    "Diferencias entre stock físico y stock disponible en el sistema"
+  ],
+  "no_conoce": [
+    "Configuración técnica del ERP",
+    "Administración de servidores",
+    "Políticas contables detalladas",
+    "Infraestructura de redes"
+  ],
+  "hallazgos_ocultos": [
+    {
+      "id": "recepcion",
+      "descripcion": "La mercadería es revisada al llegar antes de registrarse.",
+      "keywords": [
+        "reciben",
+        "recepción",
+        "llega",
+        "mercadería",
+        "productos llegan"
+      ]
+    },
+    {
+      "id": "excel",
+      "descripcion": "Algunas recepciones se anotan primero en una planilla Excel.",
+      "keywords": [
+        "excel",
+        "planilla",
+        "registran",
+        "anotan",
+        "registro"
+      ]
+    },
+    {
+      "id": "fin_dia",
+      "descripcion": "El sistema puede actualizarse al final del día.",
+      "keywords": [
+        "cuándo actualizan",
+        "cuando actualizan",
+        "momento",
+        "actualiza",
+        "final del día",
+        "sistema"
+      ]
+    },
+    {
+      "id": "ventas_stock",
+      "descripcion": "Ventas puede consultar stock antes de que Bodega termine de actualizarlo.",
+      "keywords": [
+        "ventas",
+        "stock",
+        "consulta",
+        "disponible",
+        "diferencia"
+      ]
+    },
+    {
+      "id": "devoluciones",
+      "descripcion": "Las devoluciones no siempre siguen exactamente el mismo procedimiento.",
+      "keywords": [
+        "devolución",
+        "devoluciones",
+        "devuelven",
+        "producto devuelto"
+      ]
+    },
+    {
+      "id": "responsable",
+      "descripcion": "La actualización la realiza personal de bodega.",
+      "keywords": [
+        "quién",
+        "quien",
+        "responsable",
+        "actualiza",
+        "registra"
+      ]
+    }
+  ]
+}
