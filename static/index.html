@@ -9,7 +9,7 @@
 <body>
   <main class="container">
     <header>
-      <p class="eyebrow">PROTOTIPO 0.1.1</p>
+      <p class="eyebrow">PROTOTIPO 0.2 · ENTREVISTADO CON IA</p>
       <h1>Simulador de Entrevistas</h1>
       <p class="subtitle">Entrenamiento de levantamiento de información · RetailNova</p>
     </header>
@@ -33,21 +33,21 @@
       <form id="question-form" class="composer">
         <label for="question">Tu pregunta</label>
         <div class="input-row">
-          <input id="question" type="text" autocomplete="off" placeholder="Ej.: ¿Cómo registran la mercadería cuando llega?">
+          <input id="question" type="text" autocomplete="off" placeholder="Escribe tu pregunta o repregunta...">
           <button class="primary" type="submit">Enviar</button>
         </div>
       </form>
     </section>
 
     <section id="result-screen" class="card hidden">
-      <p class="eyebrow">RETROALIMENTACIÓN</p>
+      <p class="eyebrow">RETROALIMENTACIÓN PROVISIONAL</p>
       <h2>Resultado de la entrevista</h2>
       <div class="metrics">
-        <div class="metric"><span id="coverage">0%</span><small>Cobertura</small></div>
+        <div class="metric"><span id="coverage">0%</span><small>Cobertura estimada</small></div>
         <div class="metric"><span id="questions">0</span><small>Preguntas</small></div>
-        <div class="metric"><span id="findings">0/0</span><small>Hallazgos</small></div>
+        <div class="metric"><span id="findings">0/0</span><small>Hallazgos estimados</small></div>
       </div>
-      <h3>Información descubierta</h3>
+      <h3>Información detectada</h3>
       <div id="discoveries" class="discoveries"></div>
       <h3>Retroalimentación</h3>
       <ul id="feedback"></ul>
