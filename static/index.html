@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simulador de Entrevistas · RetailNova</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <main class="container">
+    <header>
+      <p class="eyebrow">PROTOTIPO 0.1.1</p>
+      <h1>Simulador de Entrevistas</h1>
+      <p class="subtitle">Entrenamiento de levantamiento de información · RetailNova</p>
+    </header>
+
+    <section id="start-screen" class="card">
+      <h2>Caso: RetailNova</h2>
+      <div class="profile">
+        <div class="avatar">CM</div>
+        <div><strong>Carolina Morales</strong><p>Encargada de Bodega</p></div>
+      </div>
+      <p class="instruction">Tu objetivo es comprender cómo funciona actualmente el proceso de bodega. No busques proponer una solución todavía: pregunta, escucha y profundiza.</p>
+      <button id="start-btn" class="primary">Comenzar entrevista</button>
+    </section>
+
+    <section id="interview-screen" class="card hidden">
+      <div class="interview-head">
+        <div><p class="eyebrow">ENTREVISTA EN CURSO</p><h2>Carolina Morales · Bodega</h2></div>
+        <button id="end-btn" class="secondary">Finalizar entrevista</button>
+      </div>
+      <div id="chat" class="chat" aria-live="polite"></div>
+      <form id="question-form" class="composer">
+        <label for="question">Tu pregunta</label>
+        <div class="input-row">
+          <input id="question" type="text" autocomplete="off" placeholder="Ej.: ¿Cómo registran la mercadería cuando llega?">
+          <button class="primary" type="submit">Enviar</button>
+        </div>
+      </form>
+    </section>
+
+    <section id="result-screen" class="card hidden">
+      <p class="eyebrow">RETROALIMENTACIÓN</p>
+      <h2>Resultado de la entrevista</h2>
+      <div class="metrics">
+        <div class="metric"><span id="coverage">0%</span><small>Cobertura</small></div>
+        <div class="metric"><span id="questions">0</span><small>Preguntas</small></div>
+        <div class="metric"><span id="findings">0/0</span><small>Hallazgos</small></div>
+      </div>
+      <h3>Información descubierta</h3>
+      <div id="discoveries" class="discoveries"></div>
+      <h3>Retroalimentación</h3>
+      <ul id="feedback"></ul>
+      <button id="restart-btn" class="primary">Realizar otra entrevista</button>
+    </section>
+  </main>
+  <script src="/static/app.js"></script>
+</body>
+</html>
