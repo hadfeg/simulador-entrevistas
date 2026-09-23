@@ -1,0 +1,22 @@
+{
+  "id": "retailnova_bodega_inicial",
+  "nombre": "Entrevista inicial · Bodega RetailNova",
+  "caso": "retailnova",
+  "personaje": "bodega",
+  "modo": "entrenamiento",
+  "objetivo_actividad": "Comprender cómo funciona actualmente el proceso de Bodega mediante una entrevista, preguntando, escuchando, profundizando y validando la información antes de proponer soluciones.",
+  "instrucciones_estudiante": "Entrevista a Carolina para comprender el funcionamiento real del proceso de Bodega. Tu tarea es obtener evidencia suficiente para modelar posteriormente el proceso y sus requisitos. No intentes diseñar todavía una solución.",
+  "objetivos_evaluados": [
+    "preguntas_abiertas",
+    "linea_indagacion",
+    "escucha_activa",
+    "repregunta_profundizacion",
+    "actores_responsables",
+    "actividades_secuencia",
+    "datos_documentos_sistemas",
+    "problemas",
+    "neutralidad",
+    "validacion",
+    "cierre"
+  ]
+}
