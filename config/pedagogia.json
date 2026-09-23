@@ -1,0 +1,139 @@
+{
+  "objetivo_general": "Desarrollar la capacidad del estudiante para conducir entrevistas de levantamiento de información, formulando preguntas pertinentes, escuchando activamente, profundizando mediante repreguntas y validando la información obtenida para comprender procesos organizacionales y posteriormente modelar sus requisitos.",
+  "escala_logro": [
+    {
+      "id": "no_evidenciado",
+      "nombre": "No evidenciado",
+      "descripcion": "La transcripción no contiene evidencia suficiente para demostrar el objetivo."
+    },
+    {
+      "id": "en_desarrollo",
+      "nombre": "En desarrollo",
+      "descripcion": "Existe evidencia parcial o inconsistente; el estudiante inicia la conducta esperada, pero no la sostiene o profundiza suficientemente."
+    },
+    {
+      "id": "logrado",
+      "nombre": "Logrado",
+      "descripcion": "Existe evidencia clara y suficiente de la conducta esperada durante la entrevista."
+    },
+    {
+      "id": "destacado",
+      "nombre": "Destacado",
+      "descripcion": "La conducta aparece de forma consistente, pertinente y autónoma, contribuyendo claramente a profundizar el levantamiento."
+    }
+  ],
+  "objetivos": [
+    {
+      "id": "apertura_profesional",
+      "nombre": "Realizar una apertura adecuada",
+      "descripcion": "Iniciar la entrevista de manera clara, contextualizando el propósito y estableciendo una interacción profesional.",
+      "que_observar": "Presentación, contextualización del propósito, trato adecuado y comienzo ordenado de la entrevista.",
+      "evidencia_suficiente": "El estudiante inicia de forma comprensible y profesional, dejando claro qué busca conocer sin inducir respuestas.",
+      "evidencia_insuficiente": "Comienza directamente con preguntas aisladas sin contexto o presenta una apertura confusa."
+    },
+    {
+      "id": "preguntas_abiertas",
+      "nombre": "Formular preguntas abiertas",
+      "descripcion": "Utilizar preguntas que permitan al entrevistado describir procesos, experiencias y situaciones con sus propias palabras.",
+      "que_observar": "Uso de cómo, qué, cuándo, quién, de qué manera u otras formulaciones que favorezcan respuestas explicativas.",
+      "evidencia_suficiente": "Emplea varias preguntas abiertas pertinentes para explorar el proceso.",
+      "evidencia_insuficiente": "Predominan preguntas de sí/no o preguntas que contienen la respuesta esperada."
+    },
+    {
+      "id": "linea_indagacion",
+      "nombre": "Mantener una línea coherente de indagación",
+      "descripcion": "Construir una secuencia de preguntas conectadas entre sí, evitando una entrevista compuesta por temas aislados.",
+      "que_observar": "Continuidad temática, transición lógica y profundización progresiva.",
+      "evidencia_suficiente": "Las preguntas se conectan y permiten avanzar desde una visión general hacia detalles relevantes.",
+      "evidencia_insuficiente": "Salta entre temas sin aprovechar las respuestas anteriores."
+    },
+    {
+      "id": "escucha_activa",
+      "nombre": "Evidenciar escucha activa",
+      "descripcion": "Utilizar información entregada por el entrevistado para orientar preguntas posteriores.",
+      "que_observar": "Referencias explícitas o implícitas a información recién mencionada por el entrevistado.",
+      "evidencia_suficiente": "Retoma pistas, conceptos o situaciones mencionadas por el entrevistado y las usa para continuar.",
+      "evidencia_insuficiente": "Ignora información relevante entregada y continúa con preguntas predefinidas sin conexión."
+    },
+    {
+      "id": "repregunta_profundizacion",
+      "nombre": "Repreguntar y profundizar",
+      "descripcion": "Profundizar en respuestas relevantes mediante preguntas de seguimiento que aclaren causas, secuencias, responsables o consecuencias.",
+      "que_observar": "Preguntas de seguimiento sobre expresiones como 'a veces', 'depende', 'queda pendiente', 'hay diferencias' u otras pistas.",
+      "evidencia_suficiente": "Realiza repreguntas que producen información nueva o más precisa.",
+      "evidencia_insuficiente": "Acepta respuestas superficiales sin explorar aspectos relevantes que quedan abiertos."
+    },
+    {
+      "id": "actores_responsables",
+      "nombre": "Identificar actores y responsables",
+      "descripcion": "Determinar quién participa en el proceso, quién ejecuta actividades y quién toma decisiones o recibe información.",
+      "que_observar": "Preguntas sobre responsables, áreas involucradas, usuarios o destinatarios de la información.",
+      "evidencia_suficiente": "Obtiene información clara sobre uno o más responsables relevantes y su participación.",
+      "evidencia_insuficiente": "Describe actividades sin determinar quién las realiza o quién interviene."
+    },
+    {
+      "id": "actividades_secuencia",
+      "nombre": "Identificar actividades y secuencia del proceso",
+      "descripcion": "Comprender qué actividades se realizan y en qué orden ocurren.",
+      "que_observar": "Preguntas por inicio, pasos, decisiones, momentos posteriores y secuencia.",
+      "evidencia_suficiente": "La entrevista permite reconstruir una parte significativa del flujo del proceso.",
+      "evidencia_insuficiente": "Obtiene actividades aisladas sin relacionarlas temporal o lógicamente."
+    },
+    {
+      "id": "datos_documentos_sistemas",
+      "nombre": "Identificar datos, documentos y sistemas",
+      "descripcion": "Reconocer qué información se registra, dónde se registra y qué herramientas o documentos intervienen.",
+      "que_observar": "Preguntas sobre registros, campos, planillas, documentos, sistemas, entradas o salidas de información.",
+      "evidencia_suficiente": "Obtiene información concreta sobre al menos un dato, registro, documento o sistema y su uso.",
+      "evidencia_insuficiente": "Menciona herramientas o datos sin aclarar para qué se usan o cómo intervienen."
+    },
+    {
+      "id": "reglas_negocio",
+      "nombre": "Identificar reglas de negocio",
+      "descripcion": "Reconocer condiciones, restricciones o criterios que determinan cómo debe ejecutarse el proceso.",
+      "que_observar": "Preguntas del tipo qué debe cumplirse, cuándo se puede, qué ocurre si no se cumple o quién autoriza.",
+      "evidencia_suficiente": "Obtiene al menos una condición o regla que afecta la ejecución del proceso.",
+      "evidencia_insuficiente": "Describe acciones sin explorar condiciones o restricciones relevantes."
+    },
+    {
+      "id": "problemas",
+      "nombre": "Identificar problemas reales",
+      "descripcion": "Detectar dificultades, demoras, errores o inconsistencias a partir de la experiencia del entrevistado.",
+      "que_observar": "Exploración de consecuencias, dificultades frecuentes, retrabajos, diferencias o demoras.",
+      "evidencia_suficiente": "Identifica y profundiza al menos un problema sustentado por información del entrevistado.",
+      "evidencia_insuficiente": "Asume un problema sin evidencia o se limita a preguntar genéricamente si existen problemas."
+    },
+    {
+      "id": "excepciones",
+      "nombre": "Explorar excepciones y situaciones no habituales",
+      "descripcion": "Investigar qué ocurre cuando el proceso no sigue su flujo normal.",
+      "que_observar": "Preguntas por casos especiales, errores, devoluciones, faltantes, sobrecarga u otras variantes.",
+      "evidencia_suficiente": "Explora al menos una situación excepcional y obtiene información sobre cómo se maneja.",
+      "evidencia_insuficiente": "Solo reconstruye el flujo ideal o habitual."
+    },
+    {
+      "id": "neutralidad",
+      "nombre": "Evitar preguntas dirigidas y soluciones prematuras",
+      "descripcion": "Mantener una actitud de indagación sin imponer interpretaciones ni proponer una solución antes de comprender el problema.",
+      "que_observar": "Formulación neutral, ausencia de sugerencias disfrazadas de pregunta y separación entre problema y solución.",
+      "evidencia_suficiente": "Las preguntas permiten que el entrevistado describa su realidad sin inducir una respuesta o solución.",
+      "evidencia_insuficiente": "Formula repetidamente preguntas como '¿no sería mejor...?' o da por cierta una causa o solución no levantada."
+    },
+    {
+      "id": "validacion",
+      "nombre": "Validar lo comprendido",
+      "descripcion": "Comprobar con el entrevistado que la interpretación construida durante la conversación es correcta.",
+      "que_observar": "Síntesis, paráfrasis o confirmaciones del tipo 'si entendí bien...'.",
+      "evidencia_suficiente": "Realiza al menos una validación significativa de información relevante.",
+      "evidencia_insuficiente": "Nunca confirma si su interpretación del proceso es correcta."
+    },
+    {
+      "id": "cierre",
+      "nombre": "Realizar un cierre adecuado",
+      "descripcion": "Finalizar la entrevista de manera ordenada, verificando si existe información adicional relevante y cerrando la interacción.",
+      "que_observar": "Síntesis final, pregunta por aspectos faltantes o posibilidad de agregar información y cierre profesional.",
+      "evidencia_suficiente": "Cierra conscientemente la entrevista y ofrece una última oportunidad para complementar información.",
+      "evidencia_insuficiente": "Termina abruptamente después de la última pregunta."
+    }
+  ]
+}
