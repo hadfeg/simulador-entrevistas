@@ -4,12 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Simulador de Entrevistas</title>
-  <link rel="stylesheet" href="/static/style.css?v=0.5.1">
+  <link rel="stylesheet" href="/static/style.css?v=0.7.0">
 </head>
 <body>
   <main class="container">
     <header>
-      <p class="eyebrow">PROTOTIPO 0.5 · USUARIOS E INTENTOS</p>
+      <p class="eyebrow">PROTOTIPO 0.7 · ENTREVISTA POR VOZ</p>
       <h1>Simulador de Entrevistas</h1>
       <p class="subtitle">Entrenamiento de levantamiento de información</p>
     </header>
@@ -176,10 +176,26 @@
         <p id="interview-objective"></p>
       </div>
 
+      <div class="voice-panel">
+        <button id="voice-button" class="voice-button" type="button">
+          <span class="voice-icon">🎙</span>
+          <span id="voice-button-label">Hablar</span>
+        </button>
+        <div class="voice-info">
+          <strong>Entrevista por voz</strong>
+          <span id="voice-status" class="muted">Pulsa Hablar, formula tu pregunta y vuelve a pulsar para enviarla.</span>
+        </div>
+        <label class="voice-playback-option">
+          <input id="voice-playback" type="checkbox" checked>
+          <span>Escuchar respuestas de Carolina</span>
+        </label>
+      </div>
+      <p class="ai-voice-note">La voz de Carolina es generada por inteligencia artificial.</p>
+
       <div id="chat" class="chat" aria-live="polite"></div>
 
       <form id="question-form" class="composer">
-        <label for="question">Tu pregunta</label>
+        <label for="question">También puedes escribir tu pregunta</label>
         <div class="input-row">
           <input id="question" type="text" autocomplete="off" placeholder="Escribe tu pregunta o repregunta...">
           <button class="primary" type="submit">Enviar</button>
@@ -228,6 +244,6 @@
     </section>
   </main>
 
-  <script src="/static/app.js?v=0.5.1"></script>
+  <script src="/static/app.js?v=0.7.0"></script>
 </body>
 </html>
