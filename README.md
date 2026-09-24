@@ -4,7 +4,7 @@ Prototipo educativo para entrenar a estudiantes en entrevistas de levantamiento 
 
 ## Estado actual
 
-Rama de desarrollo: **v0.5 · Usuarios, login e historial**.
+Rama de desarrollo: **v0.7 · Entrevista por voz (7A)**.
 
 Esta versión incorpora autenticación local y persistencia de resultados.
 
@@ -155,3 +155,61 @@ Esas capacidades se agregarán solo cuando el flujo básico de usuarios e intent
 La profesora puede eliminar una actividad desde **Actividades creadas**.
 
 La eliminación es segura: la actividad deja de aparecer como disponible para los estudiantes, pero se conserva internamente si existen intentos anteriores. De esta forma no se pierden transcripciones ni evaluaciones históricas.
+
+
+## Hito 7A · Entrevista por voz
+
+La entrevista puede realizarse oralmente sin perder la modalidad escrita.
+
+Flujo:
+
+```text
+Estudiante habla
+      ↓
+audio del navegador
+      ↓
+gpt-4o-mini-transcribe
+      ↓
+pregunta textual
+      ↓
+motor de Carolina
+      ↓
+respuesta textual
+      ↓
+gpt-4o-mini-tts
+      ↓
+voz de Carolina
+```
+
+La pregunta y la respuesta textual quedan en la misma transcripción que utiliza el evaluador pedagógico.
+
+### Uso
+
+Durante una entrevista:
+
+1. Pulsar **Hablar**.
+2. Autorizar el micrófono la primera vez que el navegador lo solicite.
+3. Formular la pregunta.
+4. Pulsar **Detener**.
+5. El sistema transcribe la pregunta y la envía a Carolina.
+6. Si está activada **Escuchar respuestas de Carolina**, la respuesta se reproduce automáticamente.
+
+El teclado sigue disponible como alternativa.
+
+La interfaz informa que la voz del personaje es generada mediante inteligencia artificial.
+
+### Configuración opcional
+
+Los siguientes valores tienen valores predeterminados, por lo que no es obligatorio agregarlos al `.env` existente:
+
+```text
+OPENAI_TRANSCRIBE_MODEL=gpt-4o-mini-transcribe
+OPENAI_TTS_MODEL=gpt-4o-mini-tts
+OPENAI_TTS_VOICE=marin
+```
+
+El modelo de transcripción admite archivos WebM, que es el formato utilizado habitualmente por MediaRecorder en Chrome/Edge.
+
+## Hito 7B posterior
+
+Después de validar esta modalidad por turnos, la evolución prevista es utilizar Realtime/WebRTC para disminuir la latencia y permitir una conversación oral más natural, manteniendo la evaluación y el control pedagógico ya desarrollados.
