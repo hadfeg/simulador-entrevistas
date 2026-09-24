@@ -268,9 +268,44 @@ function renderTeacherSimulations() {
       '<p><strong>Objetivo:</strong> ' +
         escapeHtml(simulation.objetivo_actividad) +
       "</p>" +
-      '<div class="chips">' + objectives + "</div>";
+      '<div class="chips">' + objectives + "</div>" +
+      '<div class="simulation-actions">' +
+        '<button class="danger delete-simulation" type="button" data-id="' +
+          simulation.id +
+        '">Eliminar actividad</button>' +
+      "</div>";
 
     target.appendChild(article);
+  });
+
+  target.querySelectorAll(".delete-simulation").forEach(button => {
+    button.addEventListener("click", async () => {
+      const simulationId = Number(button.dataset.id);
+      const simulation = simulations.find(item => item.id === simulationId);
+      const confirmed = window.confirm(
+        '¿Eliminar la actividad "' +
+          (simulation ? simulation.nombre : "") +
+          '"?\n\nDejará de aparecer a los estudiantes. Los resultados históricos se conservarán.'
+      );
+
+      if (!confirmed) return;
+
+      button.disabled = true;
+
+      try {
+        const result = await fetchJson(
+          "/api/simulations/" + simulationId,
+          { method: "DELETE" }
+        );
+
+        await loadSimulations();
+        renderTeacherSimulations();
+        showStatus("teacher-message", result.message);
+      } catch (error) {
+        button.disabled = false;
+        showStatus("teacher-message", error.message, "error");
+      }
+    });
   });
 }
 
