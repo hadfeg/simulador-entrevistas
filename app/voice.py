@@ -36,8 +36,8 @@ def transcribe_audio(
         raise VoiceServiceError("La grabación está vacía.")
 
     model = (
-        os.getenv("OPENAI_TRANSCRIBE_MODEL", "gpt-4o-mini-transcribe").strip()
-        or "gpt-4o-mini-transcribe"
+        os.getenv("OPENAI_TRANSCRIBE_MODEL", "gpt-transcribe").strip()
+        or "gpt-transcribe"
     )
 
     headers = {
@@ -50,10 +50,36 @@ def transcribe_audio(
             content_type or "audio/webm",
         )
     }
-    data = {
-        "model": model,
-        "language": "es",
-    }
+    prompt = (
+        "Entrevista universitaria de levantamiento de información. "
+        "Una estudiante conversa en español de Chile con Carolina, encargada de Bodega de RetailNova. "
+        "El tema incluye recepción de mercadería, inventario, stock, despacho, devoluciones, "
+        "registros, planillas Excel y sistemas de información. "
+        "Transcribe fielmente lo que dice la estudiante y usa alfabeto latino."
+    )
+
+    if model == "gpt-transcribe":
+        data = [
+            ("model", model),
+            ("languages[]", "es"),
+            ("prompt", prompt),
+            ("keywords[]", "RetailNova"),
+            ("keywords[]", "Bodega"),
+            ("keywords[]", "inventario"),
+            ("keywords[]", "stock"),
+            ("keywords[]", "mercadería"),
+            ("keywords[]", "recepción"),
+            ("keywords[]", "despacho"),
+            ("keywords[]", "devoluciones"),
+            ("keywords[]", "Excel"),
+            ("keywords[]", "sistema"),
+        ]
+    else:
+        data = [
+            ("model", model),
+            ("language", "es"),
+            ("prompt", prompt),
+        ]
 
     try:
         with httpx.Client(timeout=60.0) as client:
