@@ -19,6 +19,7 @@ from .evaluator import (
     evaluate_interview,
 )
 from .storage import (
+    archive_simulation,
     complete_attempt,
     create_attempt,
     create_session,
@@ -186,6 +187,7 @@ def simulation_summary(simulation: dict, teacher: bool = False) -> dict:
     }
 
     if teacher:
+        result["active"] = simulation.get("active", True)
         result["objetivos"] = selected_objective_names(simulation)
         result["objetivos_personalizados"] = simulation.get(
             "objetivos_personalizados", []
@@ -393,6 +395,32 @@ def new_simulation(data: SimulationCreate, request: Request):
     return simulation_summary(created, teacher=True)
 
 
+@app.delete("/api/simulations/{simulation_id}")
+def delete_simulation(simulation_id: int, request: Request):
+    require_user(request, role="teacher")
+
+    simulation = get_simulation(simulation_id)
+    if not simulation or not simulation.get("active", True):
+        raise HTTPException(
+            status_code=404,
+            detail="La actividad no existe o ya fue eliminada.",
+        )
+
+    if not archive_simulation(simulation_id):
+        raise HTTPException(
+            status_code=409,
+            detail="No fue posible eliminar la actividad.",
+        )
+
+    return {
+        "ok": True,
+        "message": (
+            "Actividad eliminada de las simulaciones disponibles. "
+            "Los intentos y resultados históricos se conservaron."
+        ),
+    }
+
+
 @app.get("/api/students")
 def students(request: Request):
     require_user(request, role="teacher")
@@ -454,8 +482,11 @@ def start(simulation_id: int, request: Request):
     user = require_user(request, role="student")
     simulation = get_simulation(simulation_id)
 
-    if not simulation:
-        raise HTTPException(status_code=404, detail="Simulación no encontrada.")
+    if not simulation or not simulation.get("active", True):
+        raise HTTPException(
+            status_code=404,
+            detail="Esta simulación ya no está disponible.",
+        )
 
     character = CHARACTERS.get(simulation["personaje"])
     if not character:
