@@ -2,7 +2,7 @@ from pathlib import Path
 from uuid import uuid4
 import json
 
-from fastapi import FastAPI, HTTPException, Request, Response
+from fastapi import FastAPI, File, HTTPException, Request, Response, UploadFile
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
@@ -17,6 +17,12 @@ from .evaluator import (
     EvaluationConfigurationError,
     EvaluationServiceError,
     evaluate_interview,
+)
+from .voice import (
+    VoiceConfigurationError,
+    VoiceServiceError,
+    synthesize_speech,
+    transcribe_audio,
 )
 from .storage import (
     archive_simulation,
@@ -62,13 +68,17 @@ CHARACTERS = {
 
 init_db(DEFAULT_SIMULATION)
 
-app = FastAPI(title="Simulador de Entrevistas v0.5")
+app = FastAPI(title="Simulador de Entrevistas v0.7 · Voz")
 
 ACTIVE_INTERVIEWS: dict[int, dict] = {}
 
 
 class MessageIn(BaseModel):
     text: str
+
+
+class SpeechIn(BaseModel):
+    text: str = Field(min_length=1, max_length=4096)
 
 
 class SetupIn(BaseModel):
@@ -565,6 +575,66 @@ def message(data: MessageIn, request: Request):
     )
 
     return {"message": answer}
+
+
+@app.post("/api/voice/transcribe")
+async def voice_transcribe(
+    request: Request,
+    audio: UploadFile = File(...),
+):
+    user = require_user(request, role="student")
+    state = ACTIVE_INTERVIEWS.get(user["id"])
+
+    if not state:
+        raise HTTPException(
+            status_code=409,
+            detail="Primero debes comenzar una simulación.",
+        )
+
+    audio_bytes = await audio.read()
+    if len(audio_bytes) > 10 * 1024 * 1024:
+        raise HTTPException(
+            status_code=413,
+            detail="La grabación es demasiado grande. Intenta una pregunta más breve.",
+        )
+
+    try:
+        text = transcribe_audio(
+            audio_bytes=audio_bytes,
+            filename=audio.filename or "pregunta.webm",
+            content_type=audio.content_type,
+        )
+    except VoiceConfigurationError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    except VoiceServiceError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+    return {"text": text}
+
+
+@app.post("/api/voice/speech")
+def voice_speech(data: SpeechIn, request: Request):
+    user = require_user(request, role="student")
+    state = ACTIVE_INTERVIEWS.get(user["id"])
+
+    if not state:
+        raise HTTPException(
+            status_code=409,
+            detail="No hay una simulación activa.",
+        )
+
+    try:
+        audio_bytes = synthesize_speech(data.text)
+    except VoiceConfigurationError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    except VoiceServiceError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+    return Response(
+        content=audio_bytes,
+        media_type="audio/mpeg",
+        headers={"Cache-Control": "no-store"},
+    )
 
 
 @app.post("/api/end")
