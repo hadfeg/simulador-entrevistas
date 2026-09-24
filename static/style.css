@@ -433,3 +433,81 @@ summary {
     background: #f9dfdc;
   }
 }
+
+
+.voice-panel {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 14px;
+  align-items: center;
+  margin-top: 18px;
+  padding: 16px;
+  border: 1px solid #dce2e8;
+  border-radius: 14px;
+  background: #fafbfc;
+}
+
+.voice-button {
+  min-width: 118px;
+  background: #253858;
+  color: white;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.voice-button.recording {
+  background: #7a2720;
+}
+
+.voice-icon {
+  font-size: 1.15rem;
+}
+
+.voice-info {
+  min-width: 0;
+}
+
+.voice-info strong,
+.voice-info span {
+  display: block;
+}
+
+.voice-info span {
+  margin-top: 3px;
+  line-height: 1.4;
+}
+
+.voice-playback-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.voice-playback-option input {
+  width: auto;
+  margin: 0;
+}
+
+.ai-voice-note {
+  margin: 7px 0 0;
+  color: #707b88;
+  font-size: .82rem;
+}
+
+@media (max-width: 700px) {
+  .voice-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .voice-button {
+    width: 100%;
+  }
+
+  .voice-playback-option {
+    white-space: normal;
+  }
+}
