@@ -3,6 +3,7 @@ import os
 
 import httpx
 from dotenv import load_dotenv
+from openai import OpenAI
 
 ROOT = Path(__file__).resolve().parent.parent
 load_dotenv(ROOT / ".env")
@@ -40,16 +41,6 @@ def transcribe_audio(
         or "gpt-transcribe"
     )
 
-    headers = {
-        "Authorization": f"Bearer {_api_key()}",
-    }
-    files = {
-        "file": (
-            filename or "pregunta.webm",
-            audio_bytes,
-            content_type or "audio/webm",
-        )
-    }
     prompt = (
         "Entrevista universitaria de levantamiento de información. "
         "Una estudiante conversa en español de Chile con Carolina, encargada de Bodega de RetailNova. "
@@ -58,48 +49,51 @@ def transcribe_audio(
         "Transcribe fielmente lo que dice la estudiante y usa alfabeto latino."
     )
 
-    if model == "gpt-transcribe":
-        data = [
-            ("model", model),
-            ("languages[]", "es"),
-            ("prompt", prompt),
-            ("keywords[]", "RetailNova"),
-            ("keywords[]", "Bodega"),
-            ("keywords[]", "inventario"),
-            ("keywords[]", "stock"),
-            ("keywords[]", "mercadería"),
-            ("keywords[]", "recepción"),
-            ("keywords[]", "despacho"),
-            ("keywords[]", "devoluciones"),
-            ("keywords[]", "Excel"),
-            ("keywords[]", "sistema"),
-        ]
-    else:
-        data = [
-            ("model", model),
-            ("language", "es"),
-            ("prompt", prompt),
-        ]
+    keywords = [
+        "RetailNova",
+        "Bodega",
+        "inventario",
+        "stock",
+        "mercadería",
+        "recepción",
+        "despacho",
+        "devoluciones",
+        "Excel",
+        "sistema",
+    ]
 
     try:
-        with httpx.Client(timeout=60.0) as client:
-            response = client.post(
-                f"{OPENAI_BASE_URL}/audio/transcriptions",
-                headers=headers,
-                data=data,
-                files=files,
+        client = OpenAI(api_key=_api_key())
+
+        file_value = (
+            filename or "pregunta.webm",
+            audio_bytes,
+            content_type or "audio/webm",
+        )
+
+        if model == "gpt-transcribe":
+            transcription = client.audio.transcriptions.create(
+                model=model,
+                file=file_value,
+                prompt=prompt,
+                extra_body={
+                    "keywords": keywords,
+                    "languages": ["es"],
+                },
             )
-            response.raise_for_status()
-    except httpx.HTTPStatusError as exc:
+        else:
+            transcription = client.audio.transcriptions.create(
+                model=model,
+                file=file_value,
+                prompt=prompt,
+                language="es",
+            )
+    except Exception as exc:
         raise VoiceServiceError(
-            "No fue posible transcribir el audio. Revisa la clave, el modelo de transcripción y el formato de la grabación."
-        ) from exc
-    except httpx.HTTPError as exc:
-        raise VoiceServiceError(
-            "No fue posible conectar con el servicio de transcripción."
+            "No fue posible transcribir el audio. Revisa el modelo configurado y vuelve a intentarlo."
         ) from exc
 
-    text = (response.json().get("text") or "").strip()
+    text = (getattr(transcription, "text", "") or "").strip()
     if not text:
         raise VoiceServiceError(
             "No se pudo reconocer una pregunta en la grabación."
