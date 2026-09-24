@@ -23,12 +23,12 @@ El estudiante debe entrevistar personajes simulados, descubrir información rele
 - Frontend: HTML, CSS y JavaScript.
 - Entrevistado IA: `app/interviewer.py`.
 - Evaluador IA: `app/evaluator.py`.
-- Persistencia local de simulaciones: SQLite mediante `app/storage.py`.
+- Autenticación local: `app/auth.py`.
+- Persistencia: SQLite mediante `app/storage.py`.
 - Casos y personajes: JSON.
 - Objetivos pedagógicos: `config/pedagogia.json`.
 - Desarrollo local mediante `.venv`.
-- El panel docente y la vista estudiante comparten la misma aplicación.
-- El login real todavía no forma parte de esta versión.
+- Existen dos roles: `teacher` y `student`.
 
 ## Reglas pedagógicas
 
@@ -42,18 +42,20 @@ El estudiante debe entrevistar personajes simulados, descubrir información rele
 - El estudiante debe descubrir información mediante preguntas y repreguntas.
 - El evaluador debe estar separado del entrevistado.
 - La evaluación se realiza después de finalizar la entrevista.
-- Los objetivos pedagógicos no se definen en AGENTS.md; deben mantenerse en la configuración pedagógica para que puedan ser seleccionados por el docente.
+- Los objetivos pedagógicos no se definen en AGENTS.md; deben mantenerse en la configuración pedagógica.
 - Una simulación debe indicar explícitamente qué objetivos serán evaluados.
 - Los objetivos personalizados deben incluir una conducta observable y evidencia suficiente.
-- La evaluación debe basarse en evidencia de la transcripción y en los objetivos seleccionados para esa simulación.
+- La evaluación debe basarse en evidencia de la transcripción y en los objetivos seleccionados.
 - No evaluar como logro una conducta que proviene principalmente de información entregada espontáneamente por el entrevistado.
 
-## Persistencia
+## Usuarios y permisos
 
-- SQLite se usa solo para mantener el prototipo simple.
-- No agregar PostgreSQL, ORM ni servicios externos mientras SQLite sea suficiente.
-- Los archivos de base de datos local no se suben a GitHub.
-- El catálogo pedagógico permanece en JSON; las simulaciones creadas por el docente se guardan en SQLite.
+- La primera cuenta creada en una instalación vacía debe ser profesora.
+- Solo la profesora puede crear simulaciones y cuentas de estudiantes.
+- Solo el estudiante puede iniciar y realizar una entrevista.
+- Un estudiante solo puede consultar sus propios intentos.
+- La profesora puede consultar los intentos de todos los estudiantes.
+- No agregar credenciales predeterminadas ni contraseñas en el repositorio.
 
 ## Seguridad
 
@@ -61,19 +63,35 @@ El estudiante debe entrevistar personajes simulados, descubrir información rele
 - Nunca subir claves de API a GitHub.
 - Utilizar variables de entorno para secretos.
 - El archivo `.env` debe permanecer excluido mediante `.gitignore`.
+- Las contraseñas nunca deben almacenarse en texto plano.
+- El prototipo utiliza PBKDF2-HMAC-SHA256 con sal aleatoria para almacenar contraseñas.
+- La autenticación usa una cookie HTTPOnly con sesión almacenada en SQLite.
+- No exponer hashes, sales ni tokens de sesión mediante endpoints.
+- Mantener este mecanismo simple mientras el sistema siga siendo un prototipo local.
+
+## Persistencia
+
+- SQLite se usa mientras sea suficiente para el prototipo.
+- No agregar PostgreSQL, ORM ni servicios externos sin una necesidad concreta.
+- Los archivos de base de datos local no se suben a GitHub.
+- Cada intento debe quedar asociado al estudiante y a la simulación.
+- Guardar transcripción y evaluación final del intento.
+- La interrupción del servidor puede impedir reanudar una entrevista en curso; no implementar reanudación hasta que sea un requisito explícito.
 
 ## Verificación
 
 Antes de considerar terminada una modificación:
 
 1. Iniciar la aplicación.
-2. Entrar a la vista Profesora.
-3. Crear una simulación con al menos un objetivo.
-4. Confirmar que aparece en Actividades creadas.
-5. Entrar a la vista Estudiante.
-6. Confirmar que la simulación está disponible.
-7. Comenzar una entrevista.
-8. Realizar varias preguntas.
-9. Finalizar la entrevista.
-10. Verificar que la evaluación usa los objetivos seleccionados.
-11. Confirmar que no hay errores visibles.
+2. Si no existen usuarios, crear la cuenta profesora inicial.
+3. Iniciar sesión como profesora.
+4. Crear un estudiante.
+5. Crear o verificar una simulación.
+6. Cerrar sesión.
+7. Iniciar sesión como estudiante.
+8. Verificar que aparecen las simulaciones disponibles.
+9. Realizar y finalizar una entrevista.
+10. Confirmar que el intento aparece en el historial del estudiante.
+11. Cerrar sesión e iniciar como profesora.
+12. Confirmar que el resultado del estudiante puede revisarse.
+13. Confirmar que un estudiante no accede al panel docente.
