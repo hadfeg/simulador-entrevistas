@@ -51,16 +51,29 @@ function escapeHtml(value) {
 
 async function fetchJson(url, options = {}) {
   const response = await fetch(url, options);
-  const data = await response.json();
+  const raw = await response.text();
+
+  let data = {};
+  if (raw) {
+    try {
+      data = JSON.parse(raw);
+    } catch (error) {
+      data = { detail: raw };
+    }
+  }
 
   if (response.status === 401) {
     currentUser = null;
     showLogin();
-    throw new Error(data.detail || "La sesión terminó. Inicia sesión nuevamente.");
+    throw new Error(
+      data.detail || "La sesión terminó. Inicia sesión nuevamente."
+    );
   }
 
   if (!response.ok) {
-    throw new Error(data.detail || "Ocurrió un error.");
+    throw new Error(
+      data.detail || "Ocurrió un error en el servidor."
+    );
   }
 
   return data;
