@@ -68,10 +68,17 @@ REGLAS DE EVALUACIÓN
 - Usa únicamente evidencia presente en la transcripción.
 - No inventes acciones, preguntas, intenciones ni aprendizajes del estudiante.
 - La respuesta de la entrevistada por sí sola no demuestra una competencia del estudiante. Busca la acción del estudiante que provocó, profundizó, validó o utilizó esa información.
-- No premies simplemente que haya aparecido una palabra o un hallazgo oculto.
+- No premies simplemente que haya aparecido una palabra, herramienta o hallazgo oculto.
+- Una sola pregunta aislada normalmente demuestra como máximo un nivel "en_desarrollo", salvo que el objetivo pueda demostrarse de forma completa con una única acción explícita, como un cierre adecuado.
+- Para otorgar "logrado", debe existir evidencia clara de que el estudiante ejecuta la conducta de manera pertinente y consigue profundizar o comprender gracias a ella.
+- Para otorgar "destacado", exige evidencia consistente en más de un momento de la entrevista, con autonomía y pertinencia. La mera ausencia de errores no es suficiente.
 - Valora especialmente la relación entre una respuesta del entrevistado y la pregunta siguiente del estudiante.
 - Distingue una pregunta abierta de una pregunta dirigida.
 - Distingue una repregunta real de un cambio de tema.
+- Para escucha activa, exige que el estudiante retome una pista concreta entregada por la entrevistada y la utilice para orientar una pregunta posterior. Una pregunta solo relacionada temáticamente no basta para "logrado".
+- Para datos, documentos y sistemas, identificar que una herramienta existe es como máximo "en_desarrollo". Para "logrado", el estudiante debe comprender al menos su propósito, contenido, responsable, momento de uso o relación con el flujo.
+- Para actividades y secuencia, no otorgues "logrado" solo porque la entrevistada haya contado espontáneamente varios pasos. El estudiante debe explorar, ordenar o reconstruir deliberadamente el flujo.
+- Para problemas, una pregunta genérica como "¿qué problemas tienen?" no basta para "logrado"; debe existir exploración de causas, consecuencias, frecuencia o manejo actual.
 - Para validación, exige una síntesis, paráfrasis o comprobación explícita de comprensión.
 - Para cierre, exige evidencia de que el estudiante cerró conscientemente la entrevista. Pulsar un botón no cuenta como cierre conversacional.
 - Para neutralidad, considera tanto la presencia como la ausencia de preguntas que impongan causas o soluciones. No otorgues nivel destacado solo porque no hubo errores; debe existir una conducción claramente neutral y consistente.
@@ -80,6 +87,11 @@ REGLAS DE EVALUACIÓN
 - En "evidencia", incluye como máximo dos ejemplos breves tomados o parafraseados fielmente de intervenciones del estudiante.
 - La mejora sugerida debe indicar una acción concreta que el estudiante pueda intentar en una próxima entrevista.
 - Devuelve exactamente un resultado por cada objetivo solicitado y conserva su objetivo_id.
+
+CRITERIO PARA EL NIVEL GLOBAL
+- No calcules el nivel global por simple mayoría.
+- Considera la calidad general de la conducción y las competencias centrales de entrevista: preguntas, escucha, profundización, neutralidad y validación/cierre.
+- Una entrevista con varios objetivos "logrado" pero debilidades importantes en neutralidad, validación o profundidad puede permanecer "en_desarrollo".
 """.strip()
 
 
