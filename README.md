@@ -148,3 +148,10 @@ Esta versión no incorpora todavía:
 - realidad virtual.
 
 Esas capacidades se agregarán solo cuando el flujo básico de usuarios e intentos esté validado.
+
+
+## Eliminar actividades
+
+La profesora puede eliminar una actividad desde **Actividades creadas**.
+
+La eliminación es segura: la actividad deja de aparecer como disponible para los estudiantes, pero se conserva internamente si existen intentos anteriores. De esta forma no se pierden transcripciones ni evaluaciones históricas.
