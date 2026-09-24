@@ -641,7 +641,7 @@ function resetVoiceSession() {
     );
   } else {
     setVoiceStatus(
-      "Pulsa Hablar, formula tu pregunta y vuelve a pulsar para enviarla."
+      "Pulsa Hablar, formula tu pregunta y vuelve a pulsar para detener. Revisa la transcripción antes de enviarla."
     );
   }
 }
