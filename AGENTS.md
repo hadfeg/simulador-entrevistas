@@ -21,10 +21,14 @@ El estudiante debe entrevistar personajes simulados, descubrir información rele
 
 - Backend: Python + FastAPI.
 - Frontend: HTML, CSS y JavaScript.
+- Entrevistado IA: `app/interviewer.py`.
+- Evaluador IA: `app/evaluator.py`.
+- Persistencia local de simulaciones: SQLite mediante `app/storage.py`.
 - Casos y personajes: JSON.
 - Objetivos pedagógicos: `config/pedagogia.json`.
-- Configuración de cada simulación: archivo de simulación del caso.
 - Desarrollo local mediante `.venv`.
+- El panel docente y la vista estudiante comparten la misma aplicación.
+- El login real todavía no forma parte de esta versión.
 
 ## Reglas pedagógicas
 
@@ -39,7 +43,17 @@ El estudiante debe entrevistar personajes simulados, descubrir información rele
 - El evaluador debe estar separado del entrevistado.
 - La evaluación se realiza después de finalizar la entrevista.
 - Los objetivos pedagógicos no se definen en AGENTS.md; deben mantenerse en la configuración pedagógica para que puedan ser seleccionados por el docente.
+- Una simulación debe indicar explícitamente qué objetivos serán evaluados.
+- Los objetivos personalizados deben incluir una conducta observable y evidencia suficiente.
 - La evaluación debe basarse en evidencia de la transcripción y en los objetivos seleccionados para esa simulación.
+- No evaluar como logro una conducta que proviene principalmente de información entregada espontáneamente por el entrevistado.
+
+## Persistencia
+
+- SQLite se usa solo para mantener el prototipo simple.
+- No agregar PostgreSQL, ORM ni servicios externos mientras SQLite sea suficiente.
+- Los archivos de base de datos local no se suben a GitHub.
+- El catálogo pedagógico permanece en JSON; las simulaciones creadas por el docente se guardan en SQLite.
 
 ## Seguridad
 
@@ -53,9 +67,13 @@ El estudiante debe entrevistar personajes simulados, descubrir información rele
 Antes de considerar terminada una modificación:
 
 1. Iniciar la aplicación.
-2. Verificar que la página principal carga correctamente.
-3. Comenzar una entrevista.
-4. Realizar varias preguntas.
-5. Finalizar la entrevista.
-6. Verificar que aparece la evaluación por objetivos.
-7. Confirmar que no hay errores visibles.
+2. Entrar a la vista Profesora.
+3. Crear una simulación con al menos un objetivo.
+4. Confirmar que aparece en Actividades creadas.
+5. Entrar a la vista Estudiante.
+6. Confirmar que la simulación está disponible.
+7. Comenzar una entrevista.
+8. Realizar varias preguntas.
+9. Finalizar la entrevista.
+10. Verificar que la evaluación usa los objetivos seleccionados.
+11. Confirmar que no hay errores visibles.
