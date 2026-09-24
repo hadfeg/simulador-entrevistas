@@ -4,29 +4,49 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Simulador de Entrevistas</title>
-  <link rel="stylesheet" href="/static/style.css?v=0.4.0">
+  <link rel="stylesheet" href="/static/style.css?v=0.5.0">
 </head>
 <body>
   <main class="container">
     <header>
-      <p class="eyebrow">PROTOTIPO 0.4 · PANEL DOCENTE</p>
+      <p class="eyebrow">PROTOTIPO 0.5 · USUARIOS E INTENTOS</p>
       <h1>Simulador de Entrevistas</h1>
       <p class="subtitle">Entrenamiento de levantamiento de información</p>
     </header>
 
-    <section id="role-screen" class="card">
-      <p class="eyebrow">ACCESO DE PRUEBA</p>
-      <h2>¿Cómo quieres entrar?</h2>
-      <p class="muted">En este hito todavía no usamos contraseña. El login real se incorporará después de validar el flujo.</p>
-      <div class="role-grid">
-        <button id="teacher-entry" class="role-card" type="button">
-          <strong>Profesora</strong>
-          <span>Crear simulaciones, escoger entrevistado y seleccionar objetivos.</span>
-        </button>
-        <button id="student-entry" class="role-card" type="button">
-          <strong>Estudiante</strong>
-          <span>Ver simulaciones disponibles y realizar una entrevista.</span>
-        </button>
+    <section id="auth-screen" class="card">
+      <div id="setup-panel" class="hidden">
+        <p class="eyebrow">CONFIGURACIÓN INICIAL</p>
+        <h2>Crear cuenta profesora</h2>
+        <p class="muted">Esta pantalla aparece solo porque todavía no existe ningún usuario. La primera cuenta será la administradora docente del simulador.</p>
+        <form id="setup-form" class="auth-form">
+          <label>Nombre
+            <input id="setup-display-name" required maxlength="120" placeholder="Ej.: Yahima Hadfeg">
+          </label>
+          <label>Usuario
+            <input id="setup-username" required maxlength="60" autocomplete="username" placeholder="Ej.: yahima">
+          </label>
+          <label>Contraseña
+            <input id="setup-password" type="password" required minlength="8" maxlength="160" autocomplete="new-password">
+          </label>
+          <div id="setup-message" class="status-message hidden"></div>
+          <button class="primary" type="submit">Crear cuenta profesora</button>
+        </form>
+      </div>
+
+      <div id="login-panel" class="hidden">
+        <p class="eyebrow">INICIAR SESIÓN</p>
+        <h2>Acceso al simulador</h2>
+        <form id="login-form" class="auth-form">
+          <label>Usuario
+            <input id="login-username" required maxlength="60" autocomplete="username">
+          </label>
+          <label>Contraseña
+            <input id="login-password" type="password" required maxlength="160" autocomplete="current-password">
+          </label>
+          <div id="login-message" class="status-message hidden"></div>
+          <button class="primary" type="submit">Entrar</button>
+        </form>
       </div>
     </section>
 
@@ -34,12 +54,14 @@
       <div class="screen-toolbar">
         <div>
           <p class="eyebrow">PANEL DOCENTE</p>
-          <h2>Crear una simulación</h2>
+          <h2 id="teacher-welcome">Profesora</h2>
         </div>
-        <button class="secondary back-home" type="button">Volver</button>
+        <button class="secondary logout-button" type="button">Cerrar sesión</button>
       </div>
 
       <div class="card">
+        <p class="eyebrow">NUEVA ACTIVIDAD</p>
+        <h2>Crear una simulación</h2>
         <div class="learning-box">
           <strong>Objetivo general del simulador</strong>
           <p id="general-objective">Cargando...</p>
@@ -47,24 +69,19 @@
 
         <form id="simulation-form">
           <div class="form-grid">
-            <label>
-              Nombre de la simulación
+            <label>Nombre de la simulación
               <input id="simulation-title" required maxlength="160" placeholder="Ej.: Entrevista Bodega · Práctica 1">
             </label>
-
-            <label>
-              Entrevistado
+            <label>Entrevistado
               <select id="character-select" required></select>
             </label>
           </div>
 
-          <label>
-            Objetivo de esta entrevista
+          <label>Objetivo de esta entrevista
             <textarea id="activity-objective-input" required rows="3" placeholder="¿Qué quieres que practiquen o logren en esta entrevista?"></textarea>
           </label>
 
-          <label>
-            Instrucciones para el estudiante
+          <label>Instrucciones para el estudiante
             <textarea id="student-instructions-input" required rows="3" placeholder="Indica qué debe hacer el estudiante antes de comenzar."></textarea>
           </label>
 
@@ -91,13 +108,38 @@
       </div>
 
       <div class="card section-card">
-        <div class="section-heading">
-          <div>
-            <p class="eyebrow">SIMULACIONES</p>
-            <h2>Actividades creadas</h2>
-          </div>
-        </div>
+        <p class="eyebrow">SIMULACIONES</p>
+        <h2>Actividades creadas</h2>
         <div id="teacher-simulations" class="simulation-list"></div>
+      </div>
+
+      <div class="card section-card">
+        <p class="eyebrow">ESTUDIANTES</p>
+        <h2>Crear cuenta de estudiante</h2>
+        <form id="student-form">
+          <div class="form-grid three">
+            <label>Nombre
+              <input id="student-display-name" required maxlength="120" placeholder="Nombre del estudiante">
+            </label>
+            <label>Usuario
+              <input id="student-username" required maxlength="60" placeholder="Ej.: estudiante01">
+            </label>
+            <label>Contraseña inicial
+              <input id="student-password" type="password" required minlength="8" maxlength="160">
+            </label>
+          </div>
+          <div id="student-create-message" class="status-message hidden"></div>
+          <button class="primary" type="submit">Crear estudiante</button>
+        </form>
+
+        <h3>Estudiantes registrados</h3>
+        <div id="student-list" class="simple-list"></div>
+      </div>
+
+      <div class="card section-card">
+        <p class="eyebrow">RESULTADOS</p>
+        <h2>Intentos de estudiantes</h2>
+        <div id="teacher-attempts" class="attempt-list"></div>
       </div>
     </section>
 
@@ -105,11 +147,18 @@
       <div class="screen-toolbar">
         <div>
           <p class="eyebrow">ESTUDIANTE</p>
-          <h2>Simulaciones disponibles</h2>
+          <h2 id="student-welcome">Mis simulaciones</h2>
         </div>
-        <button class="secondary back-home" type="button">Volver</button>
+        <button class="secondary logout-button" type="button">Cerrar sesión</button>
       </div>
+
       <div id="student-simulations" class="simulation-list"></div>
+
+      <div class="card section-card">
+        <p class="eyebrow">HISTORIAL</p>
+        <h2>Mis intentos</h2>
+        <div id="student-attempts" class="attempt-list"></div>
+      </div>
     </section>
 
     <section id="interview-screen" class="card hidden">
@@ -139,8 +188,14 @@
     </section>
 
     <section id="result-screen" class="card hidden">
-      <p class="eyebrow">RETROALIMENTACIÓN PEDAGÓGICA</p>
-      <h2>Resultado de la entrevista</h2>
+      <div class="screen-toolbar">
+        <div>
+          <p class="eyebrow">RETROALIMENTACIÓN PEDAGÓGICA</p>
+          <h2>Resultado de la entrevista</h2>
+        </div>
+        <button id="result-back-btn" class="secondary" type="button">Volver</button>
+      </div>
+
       <div class="metrics">
         <div class="metric"><span id="global-level">—</span><small>Nivel global</small></div>
         <div class="metric"><span id="questions">0</span><small>Preguntas</small></div>
@@ -166,10 +221,13 @@
         </section>
       </div>
 
-      <button id="restart-btn" class="primary" type="button">Volver a simulaciones</button>
+      <details id="transcript-details">
+        <summary>Ver transcripción</summary>
+        <div id="saved-transcript" class="transcript-box"></div>
+      </details>
     </section>
   </main>
 
-  <script src="/static/app.js?v=0.4.0"></script>
+  <script src="/static/app.js?v=0.5.0"></script>
 </body>
 </html>
