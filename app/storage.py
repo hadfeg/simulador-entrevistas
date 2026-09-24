@@ -29,10 +29,20 @@ def init_db(default_simulation: dict):
                 instrucciones_estudiante TEXT NOT NULL,
                 objetivos_evaluados TEXT NOT NULL,
                 objetivos_personalizados TEXT NOT NULL,
+                active INTEGER NOT NULL DEFAULT 1,
                 created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
             )
             """
         )
+
+        simulation_columns = {
+            row["name"]
+            for row in conn.execute("PRAGMA table_info(simulations)").fetchall()
+        }
+        if "active" not in simulation_columns:
+            conn.execute(
+                "ALTER TABLE simulations ADD COLUMN active INTEGER NOT NULL DEFAULT 1"
+            )
 
         conn.execute(
             """
@@ -132,13 +142,26 @@ def create_simulation(simulation: dict) -> dict:
     return _simulation_row_to_dict(row)
 
 
-def list_simulations() -> list[dict]:
+def list_simulations(active_only: bool = True) -> list[dict]:
+    query = "SELECT * FROM simulations"
+    if active_only:
+        query += " WHERE active = 1"
+    query += " ORDER BY id DESC"
+
     with _connect() as conn:
-        rows = conn.execute(
-            "SELECT * FROM simulations ORDER BY id DESC"
-        ).fetchall()
+        rows = conn.execute(query).fetchall()
 
     return [_simulation_row_to_dict(row) for row in rows]
+
+
+def archive_simulation(simulation_id: int) -> bool:
+    with _connect() as conn:
+        cursor = conn.execute(
+            "UPDATE simulations SET active = 0 WHERE id = ? AND active = 1",
+            (simulation_id,),
+        )
+
+    return cursor.rowcount > 0
 
 
 def get_simulation(simulation_id: int) -> dict | None:
@@ -157,6 +180,7 @@ def _simulation_row_to_dict(row) -> dict:
     data["objetivos_personalizados"] = json.loads(
         data["objetivos_personalizados"]
     )
+    data["active"] = bool(data.get("active", 1))
     return data
 
 
