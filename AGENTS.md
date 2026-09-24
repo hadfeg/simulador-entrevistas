@@ -22,6 +22,7 @@ El estudiante debe entrevistar personajes simulados, descubrir información rele
 - Backend: Python + FastAPI.
 - Frontend: HTML, CSS y JavaScript.
 - Entrevistado IA: `app/interviewer.py`.
+- Voz: `app/voice.py`, con transcripción de preguntas y síntesis de las respuestas.
 - Evaluador IA: `app/evaluator.py`.
 - Autenticación local: `app/auth.py`.
 - Persistencia: SQLite mediante `app/storage.py`.
@@ -56,6 +57,17 @@ El estudiante debe entrevistar personajes simulados, descubrir información rele
 - Un estudiante solo puede consultar sus propios intentos.
 - La profesora puede consultar los intentos de todos los estudiantes.
 - No agregar credenciales predeterminadas ni contraseñas en el repositorio.
+
+## Voz
+
+- La modalidad por voz debe reutilizar el mismo motor de entrevista y el mismo evaluador de la modalidad escrita.
+- La pregunta transcrita debe guardarse como intervención del estudiante en la transcripción oficial.
+- La respuesta textual de Carolina debe guardarse antes de convertirla a audio.
+- Mantener el campo de texto como alternativa accesible y como respaldo si el micrófono no está disponible.
+- No enviar `OPENAI_API_KEY` al navegador.
+- La primera versión de voz es por turnos: grabar, transcribir, responder y reproducir.
+- No implementar conversación full-duplex o Realtime hasta validar pedagógica y técnicamente esta versión.
+- Informar en la interfaz que la voz del personaje es generada por inteligencia artificial.
 
 ## Seguridad
 
