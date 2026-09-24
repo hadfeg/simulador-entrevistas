@@ -414,3 +414,22 @@ summary {
     justify-content: flex-start;
   }
 }
+
+
+.simulation-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid #edf0f2;
+}
+.danger {
+  background: #fff0ee;
+  border: 1px solid #e5bdb7;
+  color: #7a2720;
+}
+@media (hover: hover) and (pointer: fine) {
+  .danger:hover {
+    background: #f9dfdc;
+  }
+}
