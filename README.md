@@ -4,70 +4,92 @@ Prototipo educativo para entrenar a estudiantes en entrevistas de levantamiento 
 
 ## Estado actual
 
-Rama de desarrollo: **v0.4 · Panel Docente**.
+Rama de desarrollo: **v0.5 · Usuarios, login e historial**.
 
-Esta versión incorpora un flujo de prueba con dos vistas:
+Esta versión incorpora autenticación local y persistencia de resultados.
 
-- **Profesora:** crea simulaciones, selecciona entrevistado y objetivos pedagógicos.
-- **Estudiante:** ve las simulaciones disponibles, realiza la entrevista y recibe retroalimentación.
+## Primera ejecución
 
-Todavía no existe autenticación real. La selección Profesora / Estudiante sirve para validar el flujo antes de implementar usuarios y contraseñas.
+Si la base de datos todavía no contiene usuarios, la aplicación muestra automáticamente:
 
-## Panel docente
+**Crear cuenta profesora**
+
+Debes definir:
+
+- nombre;
+- usuario;
+- contraseña de al menos 8 caracteres.
+
+No existen credenciales predeterminadas en el repositorio.
+
+Después de crear la primera cuenta, la aplicación inicia sesión automáticamente como profesora.
+
+## Rol profesora
 
 La profesora puede:
 
-- definir el nombre de una simulación;
-- escoger entre los entrevistados IA ya implementados;
-- escribir el objetivo particular de la entrevista;
-- escribir las instrucciones que verá el estudiante;
-- seleccionar objetivos desde el catálogo pedagógico;
+- crear simulaciones;
+- seleccionar entrevistado y objetivos pedagógicos;
 - agregar objetivos personalizados;
-- guardar la simulación;
-- revisar las actividades creadas.
+- crear cuentas de estudiantes;
+- revisar los estudiantes registrados;
+- revisar intentos y evaluaciones de todos los estudiantes;
+- consultar la transcripción asociada a un resultado.
 
-Los objetivos personalizados solicitan:
-
-1. nombre del objetivo;
-2. qué conducta se quiere observar;
-3. qué evidencia se considerará suficiente.
-
-## Vista estudiante
+## Rol estudiante
 
 El estudiante puede:
 
+- iniciar sesión con la cuenta creada por la profesora;
 - ver las simulaciones disponibles;
-- conocer el objetivo general de la actividad, sin acceder a los hallazgos ocultos del personaje;
-- comenzar la entrevista;
-- conversar con el entrevistado IA;
-- finalizar y recibir la evaluación correspondiente a los objetivos seleccionados por la profesora.
+- realizar entrevistas;
+- recibir retroalimentación;
+- consultar sus propios intentos y resultados.
+
+El estudiante no puede acceder al panel docente ni consultar intentos de otros estudiantes.
 
 ## Persistencia
 
-Las simulaciones creadas desde el panel se guardan localmente en SQLite:
+La base local SQLite se encuentra en:
 
 `data/simulador.db`
 
-La carpeta se crea automáticamente. La base de datos está excluida de GitHub.
+Contiene:
 
-Al iniciar por primera vez se carga como actividad inicial la entrevista de Bodega configurada en:
+- usuarios;
+- sesiones;
+- simulaciones;
+- intentos;
+- transcripciones;
+- evaluaciones.
 
-`casos/retailnova/simulacion_bodega.json`
+La base está excluida de GitHub mediante `.gitignore`.
+
+## Seguridad del prototipo
+
+- Las contraseñas no se almacenan en texto plano.
+- Se utiliza PBKDF2-HMAC-SHA256 con una sal aleatoria por usuario.
+- Las sesiones utilizan tokens aleatorios guardados en SQLite.
+- El navegador recibe una cookie HTTPOnly.
+- Las claves de OpenAI siguen almacenándose exclusivamente en `.env`.
+- No existe ninguna contraseña o API key en el repositorio.
+
+Este mecanismo está pensado para el prototipo local. Antes de una publicación institucional o acceso desde Internet se deberá revisar la arquitectura de autenticación y despliegue.
 
 ## Arquitectura
 
 - Backend: Python + FastAPI.
 - Entrevistado IA: `app/interviewer.py`.
 - Evaluador IA: `app/evaluator.py`.
+- Autenticación: `app/auth.py`.
 - Persistencia: `app/storage.py` + SQLite.
 - Catálogo pedagógico: `config/pedagogia.json`.
 - Casos y personajes: JSON.
 - Frontend: HTML, CSS y JavaScript.
-- Entorno local: `.venv`.
 
-## Configuración local
+## Configuración de IA
 
-El archivo `.env` debe contener:
+El archivo local `.env` debe contener:
 
 ```text
 OPENAI_API_KEY=tu_clave
@@ -75,7 +97,7 @@ OPENAI_MODEL=gpt-5.6-luna
 OPENAI_EVALUATOR_MODEL=gpt-5.6-luna
 ```
 
-Luego:
+Después ejecutar:
 
 ```text
 run.bat
@@ -85,18 +107,44 @@ y abrir:
 
 `http://127.0.0.1:8000`
 
-## Evaluación
+## Flujo del Hito 5
 
-El Hito 4 conserva el evaluador separado del entrevistado y endurece los criterios:
+```text
+Profesora
+   ↓
+login
+   ↓
+crea estudiante + simulación
+   ↓
+cierra sesión
 
-- una pregunta aislada normalmente no basta para un nivel logrado;
-- escuchar activamente exige retomar una pista concreta;
-- identificar que existe una herramienta no basta para comprender datos y sistemas;
-- una secuencia entregada espontáneamente por el entrevistado no demuestra por sí sola que el estudiante levantó el proceso;
-- el nivel destacado exige evidencia consistente en más de un momento.
+Estudiante
+   ↓
+login
+   ↓
+realiza entrevista
+   ↓
+evaluación IA
+   ↓
+intento guardado
 
-## Alcance del Hito 4
+Profesora
+   ↓
+login
+   ↓
+revisa resultado + transcripción
+```
 
-El objetivo de esta versión es validar que el docente pueda configurar una actividad sin editar JSON ni código.
+## Alcance
 
-El siguiente hito incorporará usuarios reales, login y persistencia de intentos/resultados por estudiante.
+Esta versión no incorpora todavía:
+
+- recuperación de contraseña;
+- inscripción masiva de estudiantes;
+- integración con cuentas UCN;
+- asignación selectiva de simulaciones por curso o sección;
+- despliegue web institucional;
+- voz;
+- realidad virtual.
+
+Esas capacidades se agregarán solo cuando el flujo básico de usuarios e intentos esté validado.
