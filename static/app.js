@@ -10,6 +10,17 @@ const chat = document.getElementById("chat");
 const question = document.getElementById("question");
 const submitButton = document.querySelector("#question-form button[type='submit']");
 const endButton = document.getElementById("end-btn");
+const voiceButton = document.getElementById("voice-button");
+const voiceButtonLabel = document.getElementById("voice-button-label");
+const voiceStatus = document.getElementById("voice-status");
+const voicePlayback = document.getElementById("voice-playback");
+
+let mediaRecorder = null;
+let recordingStream = null;
+let audioChunks = [];
+let isRecording = false;
+let currentAudio = null;
+let currentAudioUrl = null;
 
 let currentUser = null;
 let catalog = null;
@@ -582,10 +593,15 @@ async function startSimulation(simulationId) {
     document.getElementById("interview-objective").textContent =
       currentSimulation.objetivo_actividad;
 
+    resetVoiceSession();
     chat.innerHTML = "";
     addMessage("assistant", data.message);
     show(document.getElementById("interview-screen"));
     question.focus();
+
+    if (voicePlayback.checked) {
+      await playSpeech(data.message);
+    }
   } catch (error) {
     alert(error.message);
   }
@@ -599,40 +615,256 @@ function addMessage(role, text) {
   chat.scrollTop = chat.scrollHeight;
 }
 
+function setVoiceStatus(text) {
+  voiceStatus.textContent = text;
+}
+
+function resetVoiceSession() {
+  stopCurrentAudio();
+
+  if (recordingStream) {
+    recordingStream.getTracks().forEach(track => track.stop());
+    recordingStream = null;
+  }
+
+  mediaRecorder = null;
+  audioChunks = [];
+  isRecording = false;
+  voiceButton.classList.remove("recording");
+  voiceButton.disabled = false;
+  voiceButtonLabel.textContent = "Hablar";
+
+  if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) {
+    voiceButton.disabled = true;
+    setVoiceStatus(
+      "El navegador no permite grabar audio. Puedes continuar escribiendo."
+    );
+  } else {
+    setVoiceStatus(
+      "Pulsa Hablar, formula tu pregunta y vuelve a pulsar para enviarla."
+    );
+  }
+}
+
+function stopCurrentAudio() {
+  if (currentAudio) {
+    currentAudio.pause();
+    currentAudio = null;
+  }
+
+  if (currentAudioUrl) {
+    URL.revokeObjectURL(currentAudioUrl);
+    currentAudioUrl = null;
+  }
+}
+
+async function playSpeech(text) {
+  if (!voicePlayback.checked || !text) return;
+
+  stopCurrentAudio();
+  voiceButton.disabled = true;
+  setVoiceStatus("Carolina está hablando...");
+
+  try {
+    const response = await fetch("/api/voice/speech", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text })
+    });
+
+    if (!response.ok) {
+      const data = await response.json();
+      throw new Error(data.detail || "No fue posible generar la voz.");
+    }
+
+    const blob = await response.blob();
+    currentAudioUrl = URL.createObjectURL(blob);
+    currentAudio = new Audio(currentAudioUrl);
+
+    await new Promise((resolve, reject) => {
+      currentAudio.addEventListener("ended", resolve, { once: true });
+      currentAudio.addEventListener("error", reject, { once: true });
+      currentAudio.play().catch(reject);
+    });
+  } catch (error) {
+    addMessage("system", "Voz: " + error.message);
+  } finally {
+    stopCurrentAudio();
+    voiceButton.disabled = false;
+    setVoiceStatus("Pulsa Hablar para continuar la entrevista.");
+  }
+}
+
+function preferredAudioType() {
+  const candidates = [
+    "audio/webm;codecs=opus",
+    "audio/webm",
+    "audio/ogg;codecs=opus",
+    "audio/ogg"
+  ];
+
+  return candidates.find(type => MediaRecorder.isTypeSupported(type)) || "";
+}
+
+async function startRecording() {
+  if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) {
+    setVoiceStatus(
+      "Este navegador no permite usar el micrófono. Puedes continuar escribiendo."
+    );
+    return;
+  }
+
+  stopCurrentAudio();
+
+  try {
+    recordingStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const mimeType = preferredAudioType();
+    mediaRecorder = mimeType
+      ? new MediaRecorder(recordingStream, { mimeType })
+      : new MediaRecorder(recordingStream);
+
+    audioChunks = [];
+
+    mediaRecorder.addEventListener("dataavailable", event => {
+      if (event.data.size > 0) audioChunks.push(event.data);
+    });
+
+    mediaRecorder.addEventListener(
+      "stop",
+      async () => {
+        const type = mediaRecorder.mimeType || "audio/webm";
+        const blob = new Blob(audioChunks, { type });
+
+        if (recordingStream) {
+          recordingStream.getTracks().forEach(track => track.stop());
+          recordingStream = null;
+        }
+
+        isRecording = false;
+        voiceButton.classList.remove("recording");
+        voiceButtonLabel.textContent = "Hablar";
+        voiceButton.disabled = true;
+        setVoiceStatus("Transcribiendo tu pregunta...");
+
+        try {
+          await transcribeAndSend(blob);
+        } finally {
+          voiceButton.disabled = false;
+        }
+      },
+      { once: true }
+    );
+
+    mediaRecorder.start();
+    isRecording = true;
+    voiceButton.classList.add("recording");
+    voiceButtonLabel.textContent = "Detener";
+    setVoiceStatus("Escuchando... Habla con naturalidad.");
+  } catch (error) {
+    if (recordingStream) {
+      recordingStream.getTracks().forEach(track => track.stop());
+      recordingStream = null;
+    }
+
+    setVoiceStatus(
+      "No pude acceder al micrófono. Revisa el permiso del navegador."
+    );
+  }
+}
+
+function stopRecording() {
+  if (mediaRecorder && mediaRecorder.state === "recording") {
+    voiceButton.disabled = true;
+    voiceButtonLabel.textContent = "Procesando...";
+    mediaRecorder.stop();
+  }
+}
+
+async function transcribeAndSend(blob) {
+  if (!blob || blob.size < 500) {
+    setVoiceStatus("No se detectó suficiente audio. Intenta nuevamente.");
+    return;
+  }
+
+  const extension = blob.type.includes("ogg") ? "ogg" : "webm";
+  const form = new FormData();
+  form.append("audio", blob, "pregunta." + extension);
+
+  try {
+    const data = await fetchJson("/api/voice/transcribe", {
+      method: "POST",
+      body: form
+    });
+
+    setVoiceStatus('Entendí: "' + data.text + '"');
+    await sendQuestion(data.text);
+  } catch (error) {
+    addMessage("system", "Micrófono: " + error.message);
+    setVoiceStatus("No pude procesar la grabación. Intenta nuevamente.");
+  }
+}
+
+async function sendQuestion(text) {
+  const value = text.trim();
+  if (!value) return;
+
+  addMessage("user", value);
+  question.value = "";
+  question.disabled = true;
+  submitButton.disabled = true;
+  voiceButton.disabled = true;
+  submitButton.textContent = "Pensando...";
+  setVoiceStatus("Carolina está preparando su respuesta...");
+
+  try {
+    const data = await fetchJson("/api/message", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text: value })
+    });
+
+    addMessage("assistant", data.message);
+
+    if (voicePlayback.checked) {
+      await playSpeech(data.message);
+    } else {
+      setVoiceStatus("Pulsa Hablar para continuar la entrevista.");
+    }
+  } catch (error) {
+    addMessage("system", error.message);
+    setVoiceStatus("Puedes intentar nuevamente.");
+  } finally {
+    question.disabled = false;
+    submitButton.disabled = false;
+    if (!isRecording) voiceButton.disabled = false;
+    submitButton.textContent = "Enviar";
+    question.focus();
+  }
+}
+
+voiceButton.addEventListener("click", async () => {
+  if (isRecording) {
+    stopRecording();
+  } else {
+    await startRecording();
+  }
+});
+
 document.getElementById("question-form").addEventListener(
   "submit",
   async event => {
     event.preventDefault();
-
-    const text = question.value.trim();
-    if (!text) return;
-
-    addMessage("user", text);
-    question.value = "";
-    question.disabled = true;
-    submitButton.disabled = true;
-    submitButton.textContent = "Pensando...";
-
-    try {
-      const data = await fetchJson("/api/message", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text })
-      });
-
-      addMessage("assistant", data.message);
-    } catch (error) {
-      addMessage("system", error.message);
-    } finally {
-      question.disabled = false;
-      submitButton.disabled = false;
-      submitButton.textContent = "Enviar";
-      question.focus();
-    }
+    await sendQuestion(question.value);
   }
 );
 
 document.getElementById("end-btn").addEventListener("click", async () => {
+  if (isRecording) {
+    setVoiceStatus("Detén primero la grabación actual.");
+    return;
+  }
+
+  stopCurrentAudio();
   endButton.disabled = true;
   endButton.textContent = "Evaluando...";
 
