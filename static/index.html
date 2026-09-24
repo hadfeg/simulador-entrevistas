@@ -3,38 +3,132 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Simulador de Entrevistas · RetailNova</title>
-  <link rel="stylesheet" href="/static/style.css?v=0.3.1">
+  <title>Simulador de Entrevistas</title>
+  <link rel="stylesheet" href="/static/style.css?v=0.4.0">
 </head>
 <body>
   <main class="container">
     <header>
-      <p class="eyebrow">PROTOTIPO 0.3 · EVALUACIÓN PEDAGÓGICA</p>
+      <p class="eyebrow">PROTOTIPO 0.4 · PANEL DOCENTE</p>
       <h1>Simulador de Entrevistas</h1>
-      <p class="subtitle">Entrenamiento de levantamiento de información · RetailNova</p>
+      <p class="subtitle">Entrenamiento de levantamiento de información</p>
     </header>
 
-    <section id="start-screen" class="card">
-      <p class="eyebrow">SIMULACIÓN</p>
-      <h2 id="simulation-name">Entrevista inicial · Bodega RetailNova</h2>
-      <div class="profile">
-        <div class="avatar">CM</div>
-        <div><strong>Carolina Morales</strong><p>Encargada de Bodega</p></div>
+    <section id="role-screen" class="card">
+      <p class="eyebrow">ACCESO DE PRUEBA</p>
+      <h2>¿Cómo quieres entrar?</h2>
+      <p class="muted">En este hito todavía no usamos contraseña. El login real se incorporará después de validar el flujo.</p>
+      <div class="role-grid">
+        <button id="teacher-entry" class="role-card" type="button">
+          <strong>Profesora</strong>
+          <span>Crear simulaciones, escoger entrevistado y seleccionar objetivos.</span>
+        </button>
+        <button id="student-entry" class="role-card" type="button">
+          <strong>Estudiante</strong>
+          <span>Ver simulaciones disponibles y realizar una entrevista.</span>
+        </button>
       </div>
-      <div class="learning-box">
-        <strong>Objetivo de esta entrevista</strong>
-        <p id="activity-objective">Cargando objetivo...</p>
+    </section>
+
+    <section id="teacher-screen" class="hidden">
+      <div class="screen-toolbar">
+        <div>
+          <p class="eyebrow">PANEL DOCENTE</p>
+          <h2>Crear una simulación</h2>
+        </div>
+        <button class="secondary back-home" type="button">Volver</button>
       </div>
-      <p id="student-instructions" class="instruction">Cargando instrucciones...</p>
-      <button id="start-btn" class="primary">Comenzar entrevista</button>
+
+      <div class="card">
+        <div class="learning-box">
+          <strong>Objetivo general del simulador</strong>
+          <p id="general-objective">Cargando...</p>
+        </div>
+
+        <form id="simulation-form">
+          <div class="form-grid">
+            <label>
+              Nombre de la simulación
+              <input id="simulation-title" required maxlength="160" placeholder="Ej.: Entrevista Bodega · Práctica 1">
+            </label>
+
+            <label>
+              Entrevistado
+              <select id="character-select" required></select>
+            </label>
+          </div>
+
+          <label>
+            Objetivo de esta entrevista
+            <textarea id="activity-objective-input" required rows="3" placeholder="¿Qué quieres que practiquen o logren en esta entrevista?"></textarea>
+          </label>
+
+          <label>
+            Instrucciones para el estudiante
+            <textarea id="student-instructions-input" required rows="3" placeholder="Indica qué debe hacer el estudiante antes de comenzar."></textarea>
+          </label>
+
+          <fieldset>
+            <legend>Objetivos que quieres evaluar</legend>
+            <p class="muted">Selecciona solo los objetivos relevantes para esta simulación.</p>
+            <div id="objective-catalog" class="objective-catalog"></div>
+          </fieldset>
+
+          <section class="custom-objectives-section">
+            <div class="section-heading">
+              <div>
+                <h3>Objetivos personalizados</h3>
+                <p class="muted">Puedes agregar objetivos propios para una actividad específica.</p>
+              </div>
+              <button id="add-custom-objective" class="secondary" type="button">+ Agregar objetivo</button>
+            </div>
+            <div id="custom-objectives"></div>
+          </section>
+
+          <div id="teacher-message" class="status-message hidden" aria-live="polite"></div>
+          <button class="primary" type="submit">Guardar simulación</button>
+        </form>
+      </div>
+
+      <div class="card section-card">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">SIMULACIONES</p>
+            <h2>Actividades creadas</h2>
+          </div>
+        </div>
+        <div id="teacher-simulations" class="simulation-list"></div>
+      </div>
+    </section>
+
+    <section id="student-screen" class="hidden">
+      <div class="screen-toolbar">
+        <div>
+          <p class="eyebrow">ESTUDIANTE</p>
+          <h2>Simulaciones disponibles</h2>
+        </div>
+        <button class="secondary back-home" type="button">Volver</button>
+      </div>
+      <div id="student-simulations" class="simulation-list"></div>
     </section>
 
     <section id="interview-screen" class="card hidden">
       <div class="interview-head">
-        <div><p class="eyebrow">ENTREVISTA EN CURSO</p><h2>Carolina Morales · Bodega</h2></div>
-        <button id="end-btn" class="secondary">Finalizar entrevista</button>
+        <div>
+          <p class="eyebrow">ENTREVISTA EN CURSO</p>
+          <h2 id="interview-title">Simulación</h2>
+          <p id="interview-character" class="muted"></p>
+        </div>
+        <button id="end-btn" class="secondary" type="button">Finalizar entrevista</button>
       </div>
+
+      <div class="learning-box compact">
+        <strong>Objetivo de la actividad</strong>
+        <p id="interview-objective"></p>
+      </div>
+
       <div id="chat" class="chat" aria-live="polite"></div>
+
       <form id="question-form" class="composer">
         <label for="question">Tu pregunta</label>
         <div class="input-row">
@@ -72,9 +166,10 @@
         </section>
       </div>
 
-      <button id="restart-btn" class="primary">Realizar otra entrevista</button>
+      <button id="restart-btn" class="primary" type="button">Volver a simulaciones</button>
     </section>
   </main>
-  <script src="/static/app.js?v=0.3.1"></script>
+
+  <script src="/static/app.js?v=0.4.0"></script>
 </body>
 </html>
