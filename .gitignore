@@ -4,6 +4,11 @@
 # Variables y secretos
 .env
 
+# Base de datos local
+data/*.db
+data/*.db-shm
+data/*.db-wal
+
 # Python
 __pycache__/
 *.pyc
