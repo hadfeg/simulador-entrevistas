@@ -76,6 +76,7 @@ El estudiante debe entrevistar personajes simulados, descubrir información rele
 - Los archivos de base de datos local no se suben a GitHub.
 - Cada intento debe quedar asociado al estudiante y a la simulación.
 - Guardar transcripción y evaluación final del intento.
+- No eliminar físicamente una simulación que pueda tener historial; al quitarla del uso docente, marcarla como inactiva para preservar intentos, transcripciones y evaluaciones.
 - La interrupción del servidor puede impedir reanudar una entrevista en curso; no implementar reanudación hasta que sea un requisito explícito.
 
 ## Verificación
