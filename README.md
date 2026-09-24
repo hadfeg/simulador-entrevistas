@@ -4,53 +4,70 @@ Prototipo educativo para entrenar a estudiantes en entrevistas de levantamiento 
 
 ## Estado actual
 
-Rama de desarrollo: **v0.3 · modelo pedagógico y evaluador IA**.
+Rama de desarrollo: **v0.4 · Panel Docente**.
 
-La aplicación separa tres responsabilidades:
+Esta versión incorpora un flujo de prueba con dos vistas:
 
-1. El **entrevistado IA** interpreta al personaje y conversa con el estudiante.
-2. La **configuración pedagógica** define qué competencias pueden entrenarse y cuáles se evalúan en cada simulación.
-3. El **evaluador IA** analiza la transcripción únicamente después de finalizar la entrevista.
+- **Profesora:** crea simulaciones, selecciona entrevistado y objetivos pedagógicos.
+- **Estudiante:** ve las simulaciones disponibles, realiza la entrevista y recibe retroalimentación.
 
-## Modelo pedagógico
+Todavía no existe autenticación real. La selección Profesora / Estudiante sirve para validar el flujo antes de implementar usuarios y contraseñas.
 
-El objetivo general y el catálogo de objetivos están en:
+## Panel docente
 
-`config/pedagogia.json`
+La profesora puede:
 
-El catálogo inicial incluye objetivos relacionados con apertura, preguntas abiertas, continuidad de la indagación, escucha activa, repreguntas, actores, procesos, datos y sistemas, reglas de negocio, problemas, excepciones, neutralidad, validación y cierre.
+- definir el nombre de una simulación;
+- escoger entre los entrevistados IA ya implementados;
+- escribir el objetivo particular de la entrevista;
+- escribir las instrucciones que verá el estudiante;
+- seleccionar objetivos desde el catálogo pedagógico;
+- agregar objetivos personalizados;
+- guardar la simulación;
+- revisar las actividades creadas.
 
-La simulación actual está definida en:
+Los objetivos personalizados solicitan:
+
+1. nombre del objetivo;
+2. qué conducta se quiere observar;
+3. qué evidencia se considerará suficiente.
+
+## Vista estudiante
+
+El estudiante puede:
+
+- ver las simulaciones disponibles;
+- conocer el objetivo general de la actividad, sin acceder a los hallazgos ocultos del personaje;
+- comenzar la entrevista;
+- conversar con el entrevistado IA;
+- finalizar y recibir la evaluación correspondiente a los objetivos seleccionados por la profesora.
+
+## Persistencia
+
+Las simulaciones creadas desde el panel se guardan localmente en SQLite:
+
+`data/simulador.db`
+
+La carpeta se crea automáticamente. La base de datos está excluida de GitHub.
+
+Al iniciar por primera vez se carga como actividad inicial la entrevista de Bodega configurada en:
 
 `casos/retailnova/simulacion_bodega.json`
-
-Ese archivo selecciona qué objetivos del catálogo se evaluarán en la entrevista con Carolina. En una etapa posterior, el panel docente permitirá realizar esta selección desde la interfaz.
-
-## Escala de logro
-
-Cada objetivo se evalúa usando cuatro niveles:
-
-- No evidenciado.
-- En desarrollo.
-- Logrado.
-- Destacado.
-
-El evaluador debe justificar el nivel con evidencia de la transcripción y proponer una acción concreta de mejora.
 
 ## Arquitectura
 
 - Backend: Python + FastAPI.
 - Entrevistado IA: `app/interviewer.py`.
 - Evaluador IA: `app/evaluator.py`.
+- Persistencia: `app/storage.py` + SQLite.
 - Catálogo pedagógico: `config/pedagogia.json`.
-- Configuración de la entrevista: `casos/retailnova/simulacion_bodega.json`.
-- Frontend: HTML, CSS y JavaScript.
 - Casos y personajes: JSON.
+- Frontend: HTML, CSS y JavaScript.
 - Entorno local: `.venv`.
 
 ## Configuración local
 
-Copiar `.env.example` como `.env` y completar:
+El archivo `.env` debe contener:
 
 ```text
 OPENAI_API_KEY=tu_clave
@@ -58,7 +75,7 @@ OPENAI_MODEL=gpt-5.6-luna
 OPENAI_EVALUATOR_MODEL=gpt-5.6-luna
 ```
 
-Luego ejecutar:
+Luego:
 
 ```text
 run.bat
@@ -68,22 +85,18 @@ y abrir:
 
 `http://127.0.0.1:8000`
 
-## Principio de evaluación
+## Evaluación
 
-El sistema no evalúa solo si el estudiante consiguió una palabra o hallazgo.
+El Hito 4 conserva el evaluador separado del entrevistado y endurece los criterios:
 
-Por ejemplo, que Carolina mencione Excel no demuestra por sí mismo que el estudiante haya realizado una buena entrevista. El evaluador analiza la acción del estudiante que produjo, profundizó o validó esa información.
+- una pregunta aislada normalmente no basta para un nivel logrado;
+- escuchar activamente exige retomar una pista concreta;
+- identificar que existe una herramienta no basta para comprender datos y sistemas;
+- una secuencia entregada espontáneamente por el entrevistado no demuestra por sí sola que el estudiante levantó el proceso;
+- el nivel destacado exige evidencia consistente en más de un momento.
 
-## Alcance del Hito 3
+## Alcance del Hito 4
 
-Esta versión permite validar que:
+El objetivo de esta versión es validar que el docente pueda configurar una actividad sin editar JSON ni código.
 
-- existe un objetivo general independiente del personaje;
-- los objetivos específicos provienen de un catálogo reutilizable;
-- una simulación selecciona cuáles objetivos evaluar;
-- Carolina sigue siendo únicamente entrevistada;
-- el evaluador es un agente separado;
-- la evaluación usa evidencia de la transcripción;
-- cada objetivo recibe nivel, evidencia, justificación y sugerencia de mejora.
-
-Todavía no incluye login, panel docente, persistencia de estudiantes, voz ni realidad virtual.
+El siguiente hito incorporará usuarios reales, login y persistencia de intentos/resultados por estudiante.
