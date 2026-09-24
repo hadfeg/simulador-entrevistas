@@ -796,8 +796,14 @@ async function transcribeAndSend(blob) {
       body: form
     });
 
-    setVoiceStatus('Entendí: "' + data.text + '"');
-    await sendQuestion(data.text);
+    question.value = data.text;
+    question.focus();
+    question.setSelectionRange(question.value.length, question.value.length);
+    setVoiceStatus(
+      'Transcripción: "' +
+        data.text +
+        '". Revísala y pulsa Enviar. Si está incorrecta, edítala o vuelve a grabar.'
+    );
   } catch (error) {
     addMessage("system", "Micrófono: " + error.message);
     setVoiceStatus("No pude procesar la grabación. Intenta nuevamente.");
