@@ -567,7 +567,7 @@ function renderAttempts(targetId, rows, showStudent) {
       ? escapeHtml(levelNames[attempt.global_level] || attempt.global_level || "Evaluado")
       : "En curso";
 
-    const costBadge = attempt.usage_summary
+    const costBadge = showStudent && attempt.usage_summary
       ? '<span class="cost-badge">' +
           formatUsd(attempt.usage_summary.estimated_cost_usd) +
         "</span>"
@@ -998,7 +998,7 @@ function formatTokens(value) {
 function renderUsage(usage) {
   const section = document.getElementById("usage-section");
 
-  if (!usage || !usage.summary) {
+  if (currentUser?.role !== "teacher" || !usage || !usage.summary) {
     section.classList.add("hidden");
     return;
   }
