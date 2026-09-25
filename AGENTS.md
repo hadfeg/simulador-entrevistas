@@ -65,8 +65,12 @@ El estudiante debe entrevistar personajes simulados, descubrir información rele
 - La respuesta textual de Carolina debe guardarse antes de convertirla a audio.
 - Mantener el campo de texto como alternativa accesible y como respaldo si el micrófono no está disponible.
 - No enviar `OPENAI_API_KEY` al navegador.
-- La primera versión de voz es por turnos: grabar, transcribir, responder y reproducir.
-- No implementar conversación full-duplex o Realtime hasta validar pedagógica y técnicamente esta versión.
+- La versión 7A por turnos debe mantenerse como alternativa de respaldo.
+- La versión 7B usa WebRTC Realtime para conversación speech-to-speech.
+- La API key estándar nunca debe llegar al navegador; la creación de la sesión WebRTC se realiza a través del backend.
+- La transcripción de entrada y de salida de Realtime debe guardarse en el mismo historial utilizado por el evaluador.
+- No mezclar una conversación ya iniciada en modo texto/7A con una nueva sesión Realtime; si se desea Realtime, iniciarlo al comienzo de la entrevista.
+- Mantener semantic VAD y capacidad de interrupción mientras las pruebas pedagógicas no indiquen lo contrario.
 - Informar en la interfaz que la voz del personaje es generada por inteligencia artificial.
 
 ## Seguridad
