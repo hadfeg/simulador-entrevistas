@@ -19,7 +19,7 @@ class InterviewServiceError(RuntimeError):
     pass
 
 
-def _build_instructions(case: dict, character: dict) -> str:
+def build_interview_instructions(case: dict, character: dict) -> str:
     case_json = json.dumps(case, ensure_ascii=False, indent=2)
     character_json = json.dumps(character, ensure_ascii=False, indent=2)
 
@@ -90,7 +90,7 @@ def generate_reply(case: dict, character: dict, history: list[dict], question: s
     try:
         response = client.responses.create(
             model=model,
-            instructions=_build_instructions(case, character),
+            instructions=build_interview_instructions(case, character),
             input=_build_input(history, question),
             reasoning={"effort": "none"},
             max_output_tokens=220,
