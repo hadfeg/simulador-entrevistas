@@ -19,6 +19,12 @@ const realtimeButtonLabel = document.getElementById("realtime-button-label");
 const realtimeStatus = document.getElementById("realtime-status");
 const realtimeIndicator = document.getElementById("realtime-indicator");
 const realtimeAudio = document.getElementById("realtime-audio");
+const studentVideo = document.getElementById("student-video");
+const studentCameraPlaceholder = document.getElementById("student-camera-placeholder");
+const studentCameraState = document.getElementById("student-camera-state");
+const cameraToggle = document.getElementById("camera-toggle");
+const carolinaTile = document.getElementById("carolina-tile");
+const carolinaActivity = document.getElementById("carolina-activity");
 
 let mediaRecorder = null;
 let recordingStream = null;
@@ -36,6 +42,7 @@ let realtimeClosing = false;
 let pendingAssistantText = "";
 let realtimeCloseResolver = null;
 let nonRealtimeTurnStarted = false;
+let cameraEnabled = false;
 
 let currentUser = null;
 let catalog = null;
@@ -649,6 +656,45 @@ function addMessage(role, text) {
   chat.scrollTop = chat.scrollHeight;
 }
 
+function setCarolinaState(state) {
+  const states = ["idle", "listening", "thinking", "speaking"];
+  states.forEach(value => carolinaTile.classList.remove("state-" + value));
+  carolinaTile.classList.add("state-" + state);
+
+  const labels = {
+    idle: "Carolina está esperando",
+    listening: "Carolina te está escuchando",
+    thinking: "Carolina está pensando",
+    speaking: "Carolina está hablando"
+  };
+
+  carolinaActivity.textContent = labels[state] || labels.idle;
+}
+
+function updateCameraUi() {
+  const videoTrack = realtimeStream?.getVideoTracks?.()[0] || null;
+  cameraEnabled = Boolean(videoTrack && videoTrack.enabled);
+
+  studentVideo.classList.toggle("camera-off", !cameraEnabled);
+  studentCameraPlaceholder.classList.toggle("hidden", cameraEnabled);
+  studentCameraState.textContent = cameraEnabled
+    ? "Cámara encendida"
+    : "Cámara apagada";
+
+  cameraToggle.disabled = !videoTrack;
+  cameraToggle.textContent = cameraEnabled
+    ? "Apagar cámara"
+    : "Encender cámara";
+}
+
+cameraToggle.addEventListener("click", () => {
+  const track = realtimeStream?.getVideoTracks?.()[0];
+  if (!track) return;
+
+  track.enabled = !track.enabled;
+  updateCameraUi();
+});
+
 function setRealtimeStatus(text, state = "idle") {
   realtimeStatus.textContent = text;
   realtimeIndicator.className = "realtime-indicator " + state;
@@ -672,7 +718,7 @@ function resetRealtimeSession() {
     "idle"
   );
   realtimeButton.disabled = false;
-  realtimeButtonLabel.textContent = "Iniciar conversación en vivo";
+  realtimeButtonLabel.textContent = "Iniciar videollamada";
 }
 
 function cleanupRealtime() {
@@ -696,6 +742,10 @@ function cleanupRealtime() {
   }
 
   realtimeAudio.srcObject = null;
+  studentVideo.srcObject = null;
+  cameraEnabled = false;
+  updateCameraUi();
+  setCarolinaState("idle");
   question.disabled = false;
   submitButton.disabled = false;
   voiceButton.disabled = false;
@@ -761,8 +811,16 @@ async function connectRealtime() {
         echoCancellation: true,
         noiseSuppression: true,
         autoGainControl: true
+      },
+      video: {
+        facingMode: "user",
+        width: { ideal: 1280 },
+        height: { ideal: 720 }
       }
     });
+
+    studentVideo.srcObject = realtimeStream;
+    updateCameraUi();
 
     realtimeStream.getAudioTracks().forEach(track => {
       realtimePeer.addTrack(track, realtimeStream);
@@ -816,7 +874,7 @@ async function connectRealtime() {
 
     realtimeConnected = true;
     realtimeButton.classList.add("connected");
-    realtimeButtonLabel.textContent = "Detener voz en vivo";
+    realtimeButtonLabel.textContent = "Finalizar videollamada";
     realtimeButton.disabled = false;
 
     question.disabled = true;
@@ -824,9 +882,10 @@ async function connectRealtime() {
     voiceButton.disabled = true;
 
     setRealtimeStatus(
-      "Conectada. Habla normalmente; no necesitas pulsar ningún botón. Puedes interrumpir a Carolina.",
+      "Videollamada conectada. Habla normalmente; no necesitas pulsar ningún botón. Puedes interrumpir a Carolina.",
       "connected"
     );
+    setCarolinaState("idle");
 
     chat.innerHTML = "";
 
@@ -895,10 +954,12 @@ function handleRealtimeEvent(messageEvent) {
 
     case "input_audio_buffer.speech_started":
       setRealtimeStatus("Te escucho...", "listening");
+      setCarolinaState("listening");
       break;
 
     case "input_audio_buffer.speech_stopped":
       setRealtimeStatus("Carolina está pensando...", "connected");
+      setCarolinaState("thinking");
       break;
 
     case "conversation.item.input_audio_transcription.completed": {
@@ -928,11 +989,13 @@ function handleRealtimeEvent(messageEvent) {
         );
       }
       setRealtimeStatus("Puedes continuar hablando.", "connected");
+      setCarolinaState("idle");
       break;
     }
 
     case "response.created":
       setRealtimeStatus("Carolina está respondiendo...", "speaking");
+      setCarolinaState("speaking");
       break;
 
     case "response.done":
@@ -942,6 +1005,7 @@ function handleRealtimeEvent(messageEvent) {
       break;
 
     case "error":
+      setCarolinaState("idle");
       setRealtimeStatus(
         event.error?.message || "Ocurrió un error en la conversación en vivo.",
         "error"
@@ -981,7 +1045,8 @@ async function stopRealtimeConversation() {
   cleanupRealtime();
   realtimeButtonLabel.textContent = "Iniciar conversación en vivo";
   realtimeButton.disabled = false;
-  setRealtimeStatus("Conversación en vivo detenida.", "idle");
+  setRealtimeStatus("Videollamada detenida.", "idle");
+  setCarolinaState("idle");
 }
 
 realtimeButton.addEventListener("click", connectRealtime);
