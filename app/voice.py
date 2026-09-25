@@ -5,6 +5,8 @@ import httpx
 from dotenv import load_dotenv
 from openai import OpenAI
 
+from .usage import estimate_tts_usage
+
 ROOT = Path(__file__).resolve().parent.parent
 load_dotenv(ROOT / ".env")
 
@@ -99,10 +101,10 @@ def transcribe_audio(
             "No se pudo reconocer una pregunta en la grabación."
         )
 
-    return text
+    return {"text": text, "model": model}
 
 
-def synthesize_speech(text: str) -> bytes:
+def synthesize_speech(text: str) -> dict:
     value = text.strip()
     if not value:
         raise VoiceServiceError("No hay texto para convertir a voz.")
@@ -149,4 +151,7 @@ def synthesize_speech(text: str) -> bytes:
     if not response.content:
         raise VoiceServiceError("El servicio de voz no devolvió audio.")
 
-    return response.content
+    return {
+        "audio": response.content,
+        "usage": estimate_tts_usage(value, model),
+    }
