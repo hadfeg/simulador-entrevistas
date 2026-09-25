@@ -213,3 +213,31 @@ El modelo de transcripción admite archivos WebM, que es el formato utilizado ha
 ## Hito 7B posterior
 
 Después de validar esta modalidad por turnos, la evolución prevista es utilizar Realtime/WebRTC para disminuir la latencia y permitir una conversación oral más natural, manteniendo la evaluación y el control pedagógico ya desarrollados.
+
+
+## Consumo de tokens y costo
+
+Cada intento completado guarda un resumen de consumo para que la profesora pueda estimar el costo real de operación del simulador.
+
+Se registran:
+
+- tokens reales de entrada y salida utilizados por Carolina;
+- tokens reales de entrada y salida utilizados por el evaluador pedagógico;
+- tokens de entrada en caché cuando la API los reporta;
+- segundos de audio enviados a transcripción;
+- uso estimado de la voz sintetizada;
+- costo total estimado en USD.
+
+Los precios de referencia incorporados al prototipo corresponden al **24-09-2026**:
+
+| Modelo | Precio usado |
+| --- | --- |
+| gpt-5.6-luna | USD 0.20 / 1M entrada; USD 0.02 / 1M entrada en caché; USD 1.20 / 1M salida |
+| gpt-5.6-terra | USD 2.00 / 1M entrada; USD 0.20 / 1M entrada en caché; USD 12.00 / 1M salida |
+| gpt-5.6-sol | USD 4.00 / 1M entrada; USD 0.40 / 1M entrada en caché; USD 20.00 / 1M salida |
+| gpt-transcribe | USD 0.0045 / minuto |
+| gpt-4o-mini-tts | USD 0.60 / 1M tokens de texto de entrada; USD 12 / 1M tokens de audio de salida |
+
+El costo mostrado es una **estimación**, no una factura. Los tokens de los modelos Responses se obtienen del uso reportado por la API. La transcripción se estima usando la duración grabada y la voz TTS usa una aproximación de duración/tokens de audio.
+
+Los costos se muestran en el historial y en el detalle del intento solo para la profesora.
