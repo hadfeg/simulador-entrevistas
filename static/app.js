@@ -806,7 +806,7 @@ async function connectRealtime() {
       realtimeAudio.srcObject = event.streams[0];
     };
 
-    realtimeStream = await navigator.mediaDevices.getUserMedia({
+    const mediaConstraints = {
       audio: {
         echoCancellation: true,
         noiseSuppression: true,
@@ -817,7 +817,19 @@ async function connectRealtime() {
         width: { ideal: 1280 },
         height: { ideal: 720 }
       }
-    });
+    };
+
+    try {
+      realtimeStream = await navigator.mediaDevices.getUserMedia(
+        mediaConstraints
+      );
+    } catch (cameraError) {
+      realtimeStream = await navigator.mediaDevices.getUserMedia({
+        audio: mediaConstraints.audio,
+        video: false
+      });
+      studentCameraState.textContent = "Cámara no disponible";
+    }
 
     studentVideo.srcObject = realtimeStream;
     updateCameraUi();
