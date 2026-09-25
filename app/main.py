@@ -24,7 +24,14 @@ from .voice import (
     synthesize_speech,
     transcribe_audio,
 )
+from .realtime import (
+    RealtimeConfigurationError,
+    RealtimeServiceError,
+    create_realtime_call,
+)
 from .usage import (
+    add_live_transcription_usage,
+    add_realtime_usage,
     add_text_usage,
     add_transcription_usage,
     add_tts_usage,
@@ -81,7 +88,7 @@ CHARACTERS = {
 init_db(DEFAULT_SIMULATION)
 init_usage_db()
 
-app = FastAPI(title="Simulador de Entrevistas v0.7 · Voz")
+app = FastAPI(title="Simulador de Entrevistas v0.7B · Realtime")
 
 ACTIVE_INTERVIEWS: dict[int, dict] = {}
 
@@ -92,6 +99,17 @@ class MessageIn(BaseModel):
 
 class SpeechIn(BaseModel):
     text: str = Field(min_length=1, max_length=4096)
+
+
+class RealtimeTurnIn(BaseModel):
+    role: str
+    text: str = Field(min_length=1, max_length=8000)
+    item_id: str | None = None
+    transcription_usage: dict | None = None
+
+
+class RealtimeUsageIn(BaseModel):
+    usage: dict
 
 
 class SetupIn(BaseModel):
@@ -536,6 +554,9 @@ def start(simulation_id: int, request: Request):
         "character": character,
         "attempt_id": attempt["id"],
         "usage": new_usage(),
+        "realtime_items": set(),
+        "realtime_model": None,
+        "realtime_transcription_model": None,
     }
 
     save_attempt_progress(
@@ -671,6 +692,115 @@ def voice_speech(data: SpeechIn, request: Request):
         media_type="audio/mpeg",
         headers={"Cache-Control": "no-store"},
     )
+
+
+@app.post("/api/realtime/session")
+async def realtime_session(request: Request):
+    user = require_user(request, role="student")
+    state = ACTIVE_INTERVIEWS.get(user["id"])
+
+    if not state:
+        raise HTTPException(
+            status_code=409,
+            detail="Primero debes comenzar una simulación.",
+        )
+
+    sdp_offer = (await request.body()).decode("utf-8", errors="ignore")
+
+    try:
+        session = create_realtime_call(
+            sdp_offer=sdp_offer,
+            case=CASE,
+            character=state["character"],
+            user_id=user["id"],
+        )
+    except RealtimeConfigurationError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    except RealtimeServiceError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+    state["realtime_model"] = session["model"]
+    state["realtime_transcription_model"] = session["transcription_model"]
+
+    return Response(
+        content=session["sdp"],
+        media_type="application/sdp",
+        headers={"Cache-Control": "no-store"},
+    )
+
+
+@app.post("/api/realtime/turn")
+def realtime_turn(data: RealtimeTurnIn, request: Request):
+    user = require_user(request, role="student")
+    state = ACTIVE_INTERVIEWS.get(user["id"])
+
+    if not state:
+        raise HTTPException(
+            status_code=409,
+            detail="No hay una simulación activa.",
+        )
+
+    role = data.role.strip().lower()
+    if role not in {"user", "assistant"}:
+        raise HTTPException(
+            status_code=400,
+            detail="Rol de turno Realtime inválido.",
+        )
+
+    item_id = (data.item_id or "").strip()
+    if item_id and item_id in state["realtime_items"]:
+        return {
+            "ok": True,
+            "duplicate": True,
+            "usage_summary": finalized_usage(state["usage"])["summary"],
+        }
+
+    text = data.text.strip()
+    state["messages"].append({"role": role, "text": text})
+
+    if role == "user":
+        state["question_count"] += 1
+        if data.transcription_usage:
+            add_live_transcription_usage(
+                state["usage"],
+                state["realtime_transcription_model"]
+                or "gpt-live-transcribe",
+                data.transcription_usage,
+            )
+
+    if item_id:
+        state["realtime_items"].add(item_id)
+
+    save_attempt_progress(
+        attempt_id=state["attempt_id"],
+        question_count=state["question_count"],
+        transcript=state["messages"],
+    )
+
+    return {
+        "ok": True,
+        "usage_summary": finalized_usage(state["usage"])["summary"],
+    }
+
+
+@app.post("/api/realtime/usage")
+def realtime_usage(data: RealtimeUsageIn, request: Request):
+    user = require_user(request, role="student")
+    state = ACTIVE_INTERVIEWS.get(user["id"])
+
+    if not state:
+        raise HTTPException(
+            status_code=409,
+            detail="No hay una simulación activa.",
+        )
+
+    model = state["realtime_model"] or "gpt-realtime-2.1"
+    add_realtime_usage(state["usage"], model, data.usage)
+
+    return {
+        "ok": True,
+        "usage_summary": finalized_usage(state["usage"])["summary"],
+    }
 
 
 @app.post("/api/end")
