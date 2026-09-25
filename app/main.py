@@ -2,7 +2,7 @@ from pathlib import Path
 from uuid import uuid4
 import json
 
-from fastapi import FastAPI, File, HTTPException, Request, Response, UploadFile
+from fastapi import FastAPI, File, Form, HTTPException, Request, Response, UploadFile
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
@@ -23,6 +23,18 @@ from .voice import (
     VoiceServiceError,
     synthesize_speech,
     transcribe_audio,
+)
+from .usage import (
+    add_text_usage,
+    add_transcription_usage,
+    add_tts_usage,
+    finalized_usage,
+    new_usage,
+)
+from .usage_storage import (
+    get_attempt_usage,
+    init_usage_db,
+    save_attempt_usage,
 )
 from .storage import (
     archive_simulation,
@@ -67,6 +79,7 @@ CHARACTERS = {
 }
 
 init_db(DEFAULT_SIMULATION)
+init_usage_db()
 
 app = FastAPI(title="Simulador de Entrevistas v0.7 · Voz")
 
@@ -221,9 +234,13 @@ def attempt_summary(attempt: dict, include_detail: bool = False) -> dict:
         "completed": bool(attempt.get("completed_at")),
     }
 
+    usage = get_attempt_usage(attempt["id"])
+    result["usage_summary"] = usage.get("summary") if usage else None
+
     if include_detail:
         result["transcript"] = attempt.get("transcript", [])
         result["evaluation"] = attempt.get("evaluation")
+        result["usage"] = usage
 
     return result
 
@@ -518,6 +535,7 @@ def start(simulation_id: int, request: Request):
         "simulation": simulation,
         "character": character,
         "attempt_id": attempt["id"],
+        "usage": new_usage(),
     }
 
     save_attempt_progress(
@@ -553,7 +571,7 @@ def message(data: MessageIn, request: Request):
         )
 
     try:
-        answer = generate_reply(
+        reply = generate_reply(
             case=CASE,
             character=state["character"],
             history=state["messages"],
@@ -563,6 +581,9 @@ def message(data: MessageIn, request: Request):
         raise HTTPException(status_code=503, detail=str(exc)) from exc
     except InterviewServiceError as exc:
         raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+    answer = reply["text"]
+    add_text_usage(state["usage"], "interviewer", reply["usage"])
 
     state["question_count"] += 1
     state["messages"].append({"role": "user", "text": text})
@@ -574,13 +595,17 @@ def message(data: MessageIn, request: Request):
         transcript=state["messages"],
     )
 
-    return {"message": answer}
+    return {
+        "message": answer,
+        "usage_summary": finalized_usage(state["usage"])["summary"],
+    }
 
 
 @app.post("/api/voice/transcribe")
 async def voice_transcribe(
     request: Request,
     audio: UploadFile = File(...),
+    duration_seconds: float = Form(0.0),
 ):
     user = require_user(request, role="student")
     state = ACTIVE_INTERVIEWS.get(user["id"])
@@ -599,7 +624,7 @@ async def voice_transcribe(
         )
 
     try:
-        text = transcribe_audio(
+        transcription = transcribe_audio(
             audio_bytes=audio_bytes,
             filename=audio.filename or "pregunta.webm",
             content_type=audio.content_type,
@@ -609,7 +634,16 @@ async def voice_transcribe(
     except VoiceServiceError as exc:
         raise HTTPException(status_code=502, detail=str(exc)) from exc
 
-    return {"text": text}
+    add_transcription_usage(
+        state["usage"],
+        transcription["model"],
+        duration_seconds,
+    )
+
+    return {
+        "text": transcription["text"],
+        "usage_summary": finalized_usage(state["usage"])["summary"],
+    }
 
 
 @app.post("/api/voice/speech")
@@ -624,14 +658,16 @@ def voice_speech(data: SpeechIn, request: Request):
         )
 
     try:
-        audio_bytes = synthesize_speech(data.text)
+        speech = synthesize_speech(data.text)
     except VoiceConfigurationError as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
     except VoiceServiceError as exc:
         raise HTTPException(status_code=502, detail=str(exc)) from exc
 
+    add_tts_usage(state["usage"], speech["usage"])
+
     return Response(
-        content=audio_bytes,
+        content=speech["audio"],
         media_type="audio/mpeg",
         headers={"Cache-Control": "no-store"},
     )
@@ -649,7 +685,7 @@ def end(request: Request):
         )
 
     try:
-        evaluation = evaluate_interview(
+        evaluation, evaluator_usage = evaluate_interview(
             pedagogy=PEDAGOGY,
             simulation=state["simulation"],
             case=CASE,
@@ -661,6 +697,7 @@ def end(request: Request):
     except EvaluationServiceError as exc:
         raise HTTPException(status_code=502, detail=str(exc)) from exc
 
+    add_text_usage(state["usage"], "evaluator", evaluator_usage)
     payload = evaluation.model_dump()
     catalog = objective_catalog()
 
@@ -690,12 +727,16 @@ def end(request: Request):
         evaluation=payload,
     )
 
+    usage = finalized_usage(state["usage"])
+    save_attempt_usage(state["attempt_id"], usage)
+
     result = {
         "attempt_id": state["attempt_id"],
         "questions": state["question_count"],
         "simulation": simulation_summary(state["simulation"]),
         "evaluation": payload,
         "transcript": state["messages"],
+        "usage": usage,
     }
 
     ACTIVE_INTERVIEWS.pop(user["id"], None)
