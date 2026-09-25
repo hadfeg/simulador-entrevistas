@@ -7,6 +7,8 @@ from dotenv import load_dotenv
 from openai import OpenAI
 from pydantic import BaseModel
 
+from .usage import response_usage
+
 ROOT = Path(__file__).resolve().parent.parent
 load_dotenv(ROOT / ".env")
 
@@ -101,7 +103,7 @@ def evaluate_interview(
     case: dict,
     character: dict,
     transcript: list[dict],
-) -> InterviewEvaluation:
+) -> tuple[InterviewEvaluation, dict]:
     api_key = os.getenv("OPENAI_API_KEY", "").strip()
     if not api_key:
         raise EvaluationConfigurationError(
@@ -169,4 +171,4 @@ def evaluate_interview(
         ordered_results.append(result)
 
     evaluation.resultados = ordered_results
-    return evaluation
+    return evaluation, response_usage(response, model)
