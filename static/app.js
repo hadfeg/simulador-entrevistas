@@ -21,6 +21,7 @@ let audioChunks = [];
 let isRecording = false;
 let currentAudio = null;
 let currentAudioUrl = null;
+let recordingStartedAt = null;
 
 let currentUser = null;
 let catalog = null;
@@ -566,6 +567,12 @@ function renderAttempts(targetId, rows, showStudent) {
       ? escapeHtml(levelNames[attempt.global_level] || attempt.global_level || "Evaluado")
       : "En curso";
 
+    const costBadge = attempt.usage_summary
+      ? '<span class="cost-badge">' +
+          formatUsd(attempt.usage_summary.estimated_cost_usd) +
+        "</span>"
+      : "";
+
     article.innerHTML =
       '<div class="attempt-main">' +
         "<div>" +
@@ -575,6 +582,7 @@ function renderAttempts(targetId, rows, showStudent) {
         "</div>" +
         '<div class="attempt-actions">' +
           '<span class="level">' + level + "</span>" +
+          costBadge +
           (attempt.completed
             ? '<button class="secondary view-attempt" type="button" data-id="' + attempt.id + '">Ver resultado</button>'
             : "") +
@@ -759,8 +767,13 @@ async function startRecording() {
         voiceButton.disabled = true;
         setVoiceStatus("Transcribiendo tu pregunta...");
 
+        const durationSeconds = recordingStartedAt
+          ? Math.max(0, (performance.now() - recordingStartedAt) / 1000)
+          : 0;
+        recordingStartedAt = null;
+
         try {
-          await transcribeAndSend(blob);
+          await transcribeAndSend(blob, durationSeconds);
         } finally {
           voiceButton.disabled = false;
         }
@@ -768,6 +781,7 @@ async function startRecording() {
       { once: true }
     );
 
+    recordingStartedAt = performance.now();
     mediaRecorder.start();
     isRecording = true;
     voiceButton.classList.add("recording");
@@ -793,7 +807,7 @@ function stopRecording() {
   }
 }
 
-async function transcribeAndSend(blob) {
+async function transcribeAndSend(blob, durationSeconds = 0) {
   if (!blob || blob.size < 500) {
     setVoiceStatus("No se detectó suficiente audio. Intenta nuevamente.");
     return;
@@ -802,6 +816,7 @@ async function transcribeAndSend(blob) {
   const extension = blob.type.includes("ogg") ? "ogg" : "webm";
   const form = new FormData();
   form.append("audio", blob, "pregunta." + extension);
+  form.append("duration_seconds", String(durationSeconds));
 
   try {
     const data = await fetchJson("/api/voice/transcribe", {
@@ -892,7 +907,8 @@ document.getElementById("end-btn").addEventListener("click", async () => {
     renderEvaluation(
       data.evaluation,
       data.questions,
-      data.transcript
+      data.transcript,
+      data.usage
     );
     show(document.getElementById("result-screen"));
   } catch (error) {
@@ -915,7 +931,8 @@ async function viewAttempt(attemptId) {
     renderEvaluation(
       attempt.evaluation,
       attempt.question_count,
-      attempt.transcript
+      attempt.transcript,
+      attempt.usage
     );
     show(document.getElementById("result-screen"));
   } catch (error) {
@@ -923,7 +940,7 @@ async function viewAttempt(attemptId) {
   }
 }
 
-function renderEvaluation(evaluation, questionCount, transcript) {
+function renderEvaluation(evaluation, questionCount, transcript, usage = null) {
   document.getElementById("global-level").textContent =
     levelNames[evaluation.nivel_global] || evaluation.nivel_global;
   document.getElementById("questions").textContent = questionCount;
@@ -965,6 +982,97 @@ function renderEvaluation(evaluation, questionCount, transcript) {
   renderSimpleList("strengths", evaluation.fortalezas);
   renderSimpleList("next-steps", evaluation.proximos_pasos);
   renderTranscript(transcript || []);
+  renderUsage(usage);
+}
+
+function formatUsd(value) {
+  const number = Number(value || 0);
+  if (number === 0) return "USD $0.000000";
+  return "USD $" + number.toFixed(number >= 0.01 ? 4 : 6);
+}
+
+function formatTokens(value) {
+  return Number(value || 0).toLocaleString();
+}
+
+function renderUsage(usage) {
+  const section = document.getElementById("usage-section");
+
+  if (!usage || !usage.summary) {
+    section.classList.add("hidden");
+    return;
+  }
+
+  section.classList.remove("hidden");
+  const summary = usage.summary;
+  const interviewer = usage.text?.interviewer || {};
+  const evaluator = usage.text?.evaluator || {};
+  const transcription = usage.audio?.transcription || {};
+  const tts = usage.audio?.tts || {};
+
+  document.getElementById("usage-total-cost").textContent =
+    formatUsd(summary.estimated_cost_usd);
+  document.getElementById("usage-text-tokens").textContent =
+    formatTokens(summary.text_tokens);
+  document.getElementById("usage-voice-seconds").textContent =
+    Number(summary.voice_input_seconds || 0).toFixed(1) + " s";
+  document.getElementById("usage-tts-seconds").textContent =
+    Number(summary.estimated_tts_seconds || 0).toFixed(1) + " s";
+
+  const rows = [
+    {
+      label: "Carolina · " + (interviewer.model || "modelo conversacional"),
+      detail:
+        formatTokens(interviewer.input_tokens) +
+        " entrada · " +
+        formatTokens(interviewer.output_tokens) +
+        " salida",
+      cost: interviewer.estimated_cost_usd
+    },
+    {
+      label: "Evaluador · " + (evaluator.model || "modelo evaluador"),
+      detail:
+        formatTokens(evaluator.input_tokens) +
+        " entrada · " +
+        formatTokens(evaluator.output_tokens) +
+        " salida",
+      cost: evaluator.estimated_cost_usd
+    },
+    {
+      label: "Transcripción · " + (transcription.model || "sin uso"),
+      detail:
+        Number(transcription.seconds || 0).toFixed(1) +
+        " segundos de audio",
+      cost: transcription.estimated_cost_usd
+    },
+    {
+      label: "Voz de Carolina · " + (tts.model || "sin uso"),
+      detail:
+        "≈" +
+        formatTokens(tts.estimated_audio_output_tokens) +
+        " tokens de audio · ≈" +
+        Number(tts.estimated_audio_seconds || 0).toFixed(1) +
+        " s",
+      cost: tts.estimated_cost_usd
+    }
+  ];
+
+  document.getElementById("usage-breakdown").innerHTML = rows
+    .map(row =>
+      '<div class="usage-row">' +
+        "<div><strong>" + escapeHtml(row.label) + "</strong>" +
+        '<span class="muted">' + escapeHtml(row.detail) + "</span></div>" +
+        "<strong>" + formatUsd(row.cost) + "</strong>" +
+      "</div>"
+    )
+    .join("");
+
+  document.getElementById("usage-note").textContent =
+    "Costo aproximado en USD con precios de referencia al " +
+    (usage.pricing_date || "día de la simulación") +
+    ". Los tokens de Carolina y del evaluador son reportados por la API; " +
+    "la transcripción se estima por duración y la voz sintetizada por duración/tokens de audio. " +
+    "No sustituye la facturación real de OpenAI.";
 }
 
 function renderSimpleList(id, items) {
