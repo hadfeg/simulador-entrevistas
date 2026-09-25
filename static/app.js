@@ -34,6 +34,8 @@ let realtimeStream = null;
 let realtimeConnected = false;
 let realtimeClosing = false;
 let pendingAssistantText = "";
+let realtimeCloseResolver = null;
+let nonRealtimeTurnStarted = false;
 
 let currentUser = null;
 let catalog = null;
@@ -627,6 +629,7 @@ async function startSimulation(simulationId) {
     document.getElementById("interview-objective").textContent =
       currentSimulation.objetivo_actividad;
 
+    nonRealtimeTurnStarted = false;
     resetRealtimeSession();
     resetVoiceSession();
     chat.innerHTML = "";
@@ -726,6 +729,14 @@ async function connectRealtime() {
     return;
   }
 
+  if (nonRealtimeTurnStarted) {
+    setRealtimeStatus(
+      "La conversación ya comenzó en modo texto/por turnos. Para usar tiempo real, inicia una nueva entrevista.",
+      "error"
+    );
+    return;
+  }
+
   if (!window.RTCPeerConnection || !navigator.mediaDevices?.getUserMedia) {
     setRealtimeStatus(
       "Este navegador no admite WebRTC o acceso al micrófono. Usa el modo por turnos.",
@@ -816,6 +827,8 @@ async function connectRealtime() {
       "Conectada. Habla normalmente; no necesitas pulsar ningún botón. Puedes interrumpir a Carolina.",
       "connected"
     );
+
+    chat.innerHTML = "";
 
     realtimeChannel.send(
       JSON.stringify({
@@ -936,6 +949,10 @@ function handleRealtimeEvent(messageEvent) {
       break;
 
     case "session.closed":
+      if (realtimeCloseResolver) {
+        realtimeCloseResolver();
+        realtimeCloseResolver = null;
+      }
       cleanupRealtime();
       setRealtimeStatus("Conversación de voz finalizada.", "idle");
       break;
@@ -951,8 +968,13 @@ async function stopRealtimeConversation() {
 
   if (realtimeChannel?.readyState === "open") {
     try {
+      const closed = new Promise(resolve => {
+        realtimeCloseResolver = resolve;
+        setTimeout(resolve, 5000);
+      });
+
       realtimeChannel.send(JSON.stringify({ type: "session.close" }));
-      await new Promise(resolve => setTimeout(resolve, 1200));
+      await closed;
     } catch (error) {}
   }
 
@@ -1170,6 +1192,7 @@ async function sendQuestion(text) {
   const value = text.trim();
   if (!value) return;
 
+  nonRealtimeTurnStarted = true;
   addMessage("user", value);
   question.value = "";
   question.disabled = true;
