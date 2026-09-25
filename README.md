@@ -168,7 +168,7 @@ Estudiante habla
       ↓
 audio del navegador
       ↓
-gpt-4o-mini-transcribe
+gpt-transcribe
       ↓
 pregunta textual
       ↓
@@ -203,7 +203,7 @@ La interfaz informa que la voz del personaje es generada mediante inteligencia a
 Los siguientes valores tienen valores predeterminados, por lo que no es obligatorio agregarlos al `.env` existente:
 
 ```text
-OPENAI_TRANSCRIBE_MODEL=gpt-4o-mini-transcribe
+OPENAI_TRANSCRIBE_MODEL=gpt-transcribe
 OPENAI_TTS_MODEL=gpt-4o-mini-tts
 OPENAI_TTS_VOICE=marin
 ```
