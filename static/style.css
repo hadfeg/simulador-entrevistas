@@ -511,3 +511,78 @@ summary {
     white-space: normal;
   }
 }
+
+
+.usage-section {
+  margin-top: 20px;
+  border: 1px solid #dde2e7;
+  border-radius: 14px;
+  padding: 18px;
+  background: #fafbfc;
+}
+.usage-section h3 { margin: 3px 0 0; }
+.usage-cost {
+  font-size: 1.25rem;
+  white-space: nowrap;
+}
+.usage-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin: 16px 0;
+}
+.usage-metric {
+  background: white;
+  border: 1px solid #e2e6ea;
+  border-radius: 10px;
+  padding: 12px;
+  text-align: center;
+}
+.usage-metric span {
+  display: block;
+  font-size: 1.15rem;
+  font-weight: 800;
+}
+.usage-metric small {
+  color: #66717f;
+}
+.usage-breakdown {
+  display: grid;
+  gap: 8px;
+}
+.usage-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: flex-start;
+  border-top: 1px solid #edf0f2;
+  padding-top: 9px;
+}
+.usage-row span {
+  display: block;
+  margin-top: 3px;
+  font-size: .88rem;
+}
+.usage-note {
+  color: #707b88;
+  font-size: .8rem;
+  margin-bottom: 0;
+}
+.cost-badge {
+  border-radius: 999px;
+  padding: 5px 9px;
+  font-size: .8rem;
+  font-weight: 800;
+  background: #eef2f7;
+  white-space: nowrap;
+}
+
+@media (max-width: 700px) {
+  .usage-metrics {
+    grid-template-columns: 1fr;
+  }
+  .usage-row {
+    flex-direction: column;
+    gap: 4px;
+  }
+}
