@@ -4,12 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Simulador de Entrevistas</title>
-  <link rel="stylesheet" href="/static/style.css?v=0.7.3">
+  <link rel="stylesheet" href="/static/style.css?v=0.7b.0">
 </head>
 <body>
   <main class="container">
     <header>
-      <p class="eyebrow">PROTOTIPO 0.7 · ENTREVISTA POR VOZ</p>
+      <p class="eyebrow">PROTOTIPO 0.7B · VOZ EN TIEMPO REAL</p>
       <h1>Simulador de Entrevistas</h1>
       <p class="subtitle">Entrenamiento de levantamiento de información</p>
     </header>
@@ -176,21 +176,37 @@
         <p id="interview-objective"></p>
       </div>
 
-      <div class="voice-panel">
-        <button id="voice-button" class="voice-button" type="button">
-          <span class="voice-icon">🎙</span>
-          <span id="voice-button-label">Hablar</span>
+      <div class="realtime-panel">
+        <button id="realtime-button" class="realtime-button" type="button">
+          <span>🎧</span>
+          <span id="realtime-button-label">Iniciar conversación en vivo</span>
         </button>
-        <div class="voice-info">
-          <strong>Entrevista por voz</strong>
-          <span id="voice-status" class="muted">Pulsa Hablar, formula tu pregunta y vuelve a pulsar para detener. Revisa la transcripción antes de enviarla.</span>
+        <div class="realtime-info">
+          <strong>Voz en tiempo real</strong>
+          <span id="realtime-status" class="muted">Conecta el micrófono y luego habla normalmente. Carolina detectará tus turnos y puedes interrumpirla.</span>
         </div>
-        <label class="voice-playback-option">
-          <input id="voice-playback" type="checkbox" checked>
-          <span>Escuchar respuestas de Carolina</span>
-        </label>
+        <span id="realtime-indicator" class="realtime-indicator">Desconectado</span>
       </div>
+      <audio id="realtime-audio" autoplay></audio>
       <p class="ai-voice-note">La voz de Carolina es generada por inteligencia artificial.</p>
+
+      <details class="turn-mode-details">
+        <summary>Usar modo por turnos (7A) como alternativa</summary>
+        <div class="voice-panel">
+          <button id="voice-button" class="voice-button" type="button">
+            <span class="voice-icon">🎙</span>
+            <span id="voice-button-label">Hablar</span>
+          </button>
+          <div class="voice-info">
+            <strong>Voz por turnos</strong>
+            <span id="voice-status" class="muted">Pulsa Hablar, formula tu pregunta y vuelve a pulsar para detener. Revisa la transcripción antes de enviarla.</span>
+          </div>
+          <label class="voice-playback-option">
+            <input id="voice-playback" type="checkbox" checked>
+            <span>Escuchar respuestas de Carolina</span>
+          </label>
+        </div>
+      </details>
 
       <div id="chat" class="chat" aria-live="polite"></div>
 
@@ -272,6 +288,6 @@
     </section>
   </main>
 
-  <script src="/static/app.js?v=0.7.3"></script>
+  <script src="/static/app.js?v=0.7b.0"></script>
 </body>
 </html>
