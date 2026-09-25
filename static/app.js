@@ -14,6 +14,11 @@ const voiceButton = document.getElementById("voice-button");
 const voiceButtonLabel = document.getElementById("voice-button-label");
 const voiceStatus = document.getElementById("voice-status");
 const voicePlayback = document.getElementById("voice-playback");
+const realtimeButton = document.getElementById("realtime-button");
+const realtimeButtonLabel = document.getElementById("realtime-button-label");
+const realtimeStatus = document.getElementById("realtime-status");
+const realtimeIndicator = document.getElementById("realtime-indicator");
+const realtimeAudio = document.getElementById("realtime-audio");
 
 let mediaRecorder = null;
 let recordingStream = null;
@@ -22,6 +27,13 @@ let isRecording = false;
 let currentAudio = null;
 let currentAudioUrl = null;
 let recordingStartedAt = null;
+
+let realtimePeer = null;
+let realtimeChannel = null;
+let realtimeStream = null;
+let realtimeConnected = false;
+let realtimeClosing = false;
+let pendingAssistantText = "";
 
 let currentUser = null;
 let catalog = null;
@@ -171,6 +183,7 @@ document.querySelectorAll(".logout-button").forEach(button => {
       console.error(error);
     }
 
+    cleanupRealtime();
     currentUser = null;
     catalog = null;
     simulations = [];
@@ -614,15 +627,12 @@ async function startSimulation(simulationId) {
     document.getElementById("interview-objective").textContent =
       currentSimulation.objetivo_actividad;
 
+    resetRealtimeSession();
     resetVoiceSession();
     chat.innerHTML = "";
     addMessage("assistant", data.message);
     show(document.getElementById("interview-screen"));
     question.focus();
-
-    if (voicePlayback.checked) {
-      await playSpeech(data.message);
-    }
   } catch (error) {
     alert(error.message);
   }
@@ -635,6 +645,324 @@ function addMessage(role, text) {
   chat.appendChild(div);
   chat.scrollTop = chat.scrollHeight;
 }
+
+function setRealtimeStatus(text, state = "idle") {
+  realtimeStatus.textContent = text;
+  realtimeIndicator.className = "realtime-indicator " + state;
+
+  const labels = {
+    idle: "Desconectado",
+    connecting: "Conectando",
+    connected: "En vivo",
+    speaking: "Carolina habla",
+    listening: "Escuchando",
+    error: "Error"
+  };
+
+  realtimeIndicator.textContent = labels[state] || state;
+}
+
+function resetRealtimeSession() {
+  cleanupRealtime();
+  setRealtimeStatus(
+    "Conecta el micrófono y luego habla normalmente. Carolina detectará tus turnos y puedes interrumpirla.",
+    "idle"
+  );
+  realtimeButton.disabled = false;
+  realtimeButtonLabel.textContent = "Iniciar conversación en vivo";
+}
+
+function cleanupRealtime() {
+  realtimeConnected = false;
+  realtimeClosing = false;
+  pendingAssistantText = "";
+
+  if (realtimeChannel) {
+    try { realtimeChannel.close(); } catch (error) {}
+    realtimeChannel = null;
+  }
+
+  if (realtimePeer) {
+    try { realtimePeer.close(); } catch (error) {}
+    realtimePeer = null;
+  }
+
+  if (realtimeStream) {
+    realtimeStream.getTracks().forEach(track => track.stop());
+    realtimeStream = null;
+  }
+
+  realtimeAudio.srcObject = null;
+  question.disabled = false;
+  submitButton.disabled = false;
+  voiceButton.disabled = false;
+  realtimeButton.classList.remove("connected");
+}
+
+async function waitForIceGathering(peer) {
+  if (peer.iceGatheringState === "complete") return;
+
+  await new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => {
+      peer.removeEventListener("icegatheringstatechange", onState);
+      reject(new Error("Se agotó el tiempo al preparar la conexión de voz."));
+    }, 10000);
+
+    function onState() {
+      if (peer.iceGatheringState !== "complete") return;
+      clearTimeout(timeout);
+      peer.removeEventListener("icegatheringstatechange", onState);
+      resolve();
+    }
+
+    peer.addEventListener("icegatheringstatechange", onState);
+    onState();
+  });
+}
+
+async function connectRealtime() {
+  if (realtimeConnected) {
+    await stopRealtimeConversation();
+    return;
+  }
+
+  if (!window.RTCPeerConnection || !navigator.mediaDevices?.getUserMedia) {
+    setRealtimeStatus(
+      "Este navegador no admite WebRTC o acceso al micrófono. Usa el modo por turnos.",
+      "error"
+    );
+    return;
+  }
+
+  realtimeButton.disabled = true;
+  setRealtimeStatus("Solicitando acceso al micrófono...", "connecting");
+
+  try {
+    realtimePeer = new RTCPeerConnection();
+
+    realtimeAudio.autoplay = true;
+    realtimePeer.ontrack = event => {
+      realtimeAudio.srcObject = event.streams[0];
+    };
+
+    realtimeStream = await navigator.mediaDevices.getUserMedia({
+      audio: {
+        echoCancellation: true,
+        noiseSuppression: true,
+        autoGainControl: true
+      }
+    });
+
+    realtimeStream.getAudioTracks().forEach(track => {
+      realtimePeer.addTrack(track, realtimeStream);
+    });
+
+    realtimeChannel = realtimePeer.createDataChannel("oai-events");
+    realtimeChannel.addEventListener("message", handleRealtimeEvent);
+
+    const openPromise = new Promise((resolve, reject) => {
+      const timeout = setTimeout(
+        () => reject(new Error("La sesión Realtime no abrió a tiempo.")),
+        15000
+      );
+
+      realtimeChannel.addEventListener(
+        "open",
+        () => {
+          clearTimeout(timeout);
+          resolve();
+        },
+        { once: true }
+      );
+    });
+
+    const offer = await realtimePeer.createOffer();
+    await realtimePeer.setLocalDescription(offer);
+    await waitForIceGathering(realtimePeer);
+
+    const sdp = realtimePeer.localDescription?.sdp;
+    if (!sdp) throw new Error("No se pudo crear la oferta de audio.");
+
+    setRealtimeStatus("Conectando con Carolina...", "connecting");
+
+    const response = await fetch("/api/realtime/session", {
+      method: "POST",
+      headers: { "Content-Type": "application/sdp" },
+      body: sdp
+    });
+
+    if (!response.ok) {
+      const detail = await response.text();
+      throw new Error(detail || "No fue posible iniciar Realtime.");
+    }
+
+    await realtimePeer.setRemoteDescription({
+      type: "answer",
+      sdp: await response.text()
+    });
+
+    await openPromise;
+
+    realtimeConnected = true;
+    realtimeButton.classList.add("connected");
+    realtimeButtonLabel.textContent = "Detener voz en vivo";
+    realtimeButton.disabled = false;
+
+    question.disabled = true;
+    submitButton.disabled = true;
+    voiceButton.disabled = true;
+
+    setRealtimeStatus(
+      "Conectada. Habla normalmente; no necesitas pulsar ningún botón. Puedes interrumpir a Carolina.",
+      "connected"
+    );
+
+    realtimeChannel.send(
+      JSON.stringify({
+        type: "response.create",
+        response: {
+          instructions:
+            "Saluda brevemente al estudiante como Carolina y dile que puede comenzar cuando quiera. No entregues información del caso todavía."
+        }
+      })
+    );
+  } catch (error) {
+    cleanupRealtime();
+    realtimeButton.disabled = false;
+    setRealtimeStatus(error.message, "error");
+  }
+}
+
+async function recordRealtimeTurn(role, text, itemId = null, transcriptionUsage = null) {
+  if (!text?.trim()) return;
+
+  try {
+    await fetchJson("/api/realtime/turn", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        role,
+        text: text.trim(),
+        item_id: itemId,
+        transcription_usage: transcriptionUsage
+      })
+    });
+  } catch (error) {
+    console.error("No se pudo guardar el turno Realtime.", error);
+  }
+}
+
+async function recordRealtimeUsage(usage) {
+  if (!usage) return;
+
+  try {
+    await fetchJson("/api/realtime/usage", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ usage })
+    });
+  } catch (error) {
+    console.error("No se pudo guardar el uso Realtime.", error);
+  }
+}
+
+function handleRealtimeEvent(messageEvent) {
+  let event;
+
+  try {
+    event = JSON.parse(messageEvent.data);
+  } catch (error) {
+    return;
+  }
+
+  switch (event.type) {
+    case "session.created":
+    case "session.updated":
+      break;
+
+    case "input_audio_buffer.speech_started":
+      setRealtimeStatus("Te escucho...", "listening");
+      break;
+
+    case "input_audio_buffer.speech_stopped":
+      setRealtimeStatus("Carolina está pensando...", "connected");
+      break;
+
+    case "conversation.item.input_audio_transcription.completed": {
+      const transcript = (event.transcript || "").trim();
+      if (transcript) {
+        addMessage("user", transcript);
+        recordRealtimeTurn(
+          "user",
+          transcript,
+          event.item_id || null,
+          event.usage || null
+        );
+      }
+      break;
+    }
+
+    case "response.output_audio_transcript.done": {
+      const transcript = (event.transcript || "").trim();
+      pendingAssistantText = transcript;
+      if (transcript) {
+        addMessage("assistant", transcript);
+        recordRealtimeTurn(
+          "assistant",
+          transcript,
+          event.item_id || null,
+          null
+        );
+      }
+      setRealtimeStatus("Puedes continuar hablando.", "connected");
+      break;
+    }
+
+    case "response.created":
+      setRealtimeStatus("Carolina está respondiendo...", "speaking");
+      break;
+
+    case "response.done":
+      if (event.response?.usage) {
+        recordRealtimeUsage(event.response.usage);
+      }
+      break;
+
+    case "error":
+      setRealtimeStatus(
+        event.error?.message || "Ocurrió un error en la conversación en vivo.",
+        "error"
+      );
+      break;
+
+    case "session.closed":
+      cleanupRealtime();
+      setRealtimeStatus("Conversación de voz finalizada.", "idle");
+      break;
+  }
+}
+
+async function stopRealtimeConversation() {
+  if (!realtimeConnected && !realtimePeer) return;
+
+  realtimeClosing = true;
+  realtimeButton.disabled = true;
+  setRealtimeStatus("Cerrando conversación en vivo...", "connecting");
+
+  if (realtimeChannel?.readyState === "open") {
+    try {
+      realtimeChannel.send(JSON.stringify({ type: "session.close" }));
+      await new Promise(resolve => setTimeout(resolve, 1200));
+    } catch (error) {}
+  }
+
+  cleanupRealtime();
+  realtimeButtonLabel.textContent = "Iniciar conversación en vivo";
+  realtimeButton.disabled = false;
+  setRealtimeStatus("Conversación en vivo detenida.", "idle");
+}
+
+realtimeButton.addEventListener("click", connectRealtime);
 
 function setVoiceStatus(text) {
   voiceStatus.textContent = text;
@@ -898,6 +1226,10 @@ document.getElementById("end-btn").addEventListener("click", async () => {
     return;
   }
 
+  if (realtimeConnected || realtimePeer) {
+    await stopRealtimeConversation();
+  }
+
   stopCurrentAudio();
   endButton.disabled = true;
   endButton.textContent = "Evaluando...";
@@ -1009,6 +1341,8 @@ function renderUsage(usage) {
   const evaluator = usage.text?.evaluator || {};
   const transcription = usage.audio?.transcription || {};
   const tts = usage.audio?.tts || {};
+  const realtime = usage.realtime || {};
+  const liveTranscription = usage.live_transcription || {};
 
   document.getElementById("usage-total-cost").textContent =
     formatUsd(summary.estimated_cost_usd);
@@ -1019,7 +1353,35 @@ function renderUsage(usage) {
   document.getElementById("usage-tts-seconds").textContent =
     Number(summary.estimated_tts_seconds || 0).toFixed(1) + " s";
 
-  const rows = [
+  const rows = [];
+
+  if (realtime.model) {
+    rows.push(
+      {
+        label: "Carolina Realtime · " + realtime.model,
+        detail:
+          formatTokens(realtime.input_text_tokens) +
+          " texto entrada · " +
+          formatTokens(realtime.input_audio_tokens) +
+          " audio entrada · " +
+          formatTokens(realtime.output_audio_tokens) +
+          " audio salida",
+        cost: realtime.estimated_cost_usd
+      },
+      {
+        label: "Transcripción en vivo · " +
+          (liveTranscription.model || "gpt-live-transcribe"),
+        detail:
+          formatTokens(liveTranscription.audio_tokens) +
+          " tokens de audio · ≈" +
+          Number(liveTranscription.estimated_seconds || 0).toFixed(1) +
+          " s",
+        cost: liveTranscription.estimated_cost_usd
+      }
+    );
+  }
+
+  if (interviewer.model) rows.push(
     {
       label: "Carolina · " + (interviewer.model || "modelo conversacional"),
       detail:
@@ -1028,7 +1390,10 @@ function renderUsage(usage) {
         formatTokens(interviewer.output_tokens) +
         " salida",
       cost: interviewer.estimated_cost_usd
-    },
+    }
+  );
+
+  rows.push(
     {
       label: "Evaluador · " + (evaluator.model || "modelo evaluador"),
       detail:
@@ -1055,7 +1420,7 @@ function renderUsage(usage) {
         " s",
       cost: tts.estimated_cost_usd
     }
-  ];
+  );
 
   document.getElementById("usage-breakdown").innerHTML = rows
     .map(row =>
@@ -1070,8 +1435,8 @@ function renderUsage(usage) {
   document.getElementById("usage-note").textContent =
     "Costo aproximado en USD con precios de referencia al " +
     (usage.pricing_date || "día de la simulación") +
-    ". Los tokens de Carolina y del evaluador son reportados por la API; " +
-    "la transcripción se estima por duración y la voz sintetizada por duración/tokens de audio. " +
+    ". Los modelos de texto y Realtime usan el consumo reportado por la API; " +
+    "las transcripciones de voz se estiman con su uso/duración y el TTS 7A por duración/tokens de audio. " +
     "No sustituye la facturación real de OpenAI.";
 }
 
@@ -1101,6 +1466,7 @@ function renderTranscript(transcript) {
 }
 
 document.getElementById("result-back-btn").addEventListener("click", async () => {
+  cleanupRealtime();
   currentSimulation = null;
 
   if (currentUser.role === "teacher") {
