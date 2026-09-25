@@ -548,7 +548,7 @@ def start(simulation_id: int, request: Request):
     )
 
     ACTIVE_INTERVIEWS[user["id"]] = {
-        "messages": [{"role": "assistant", "text": opening}],
+        "messages": [],
         "question_count": 0,
         "simulation": simulation,
         "character": character,
@@ -562,7 +562,7 @@ def start(simulation_id: int, request: Request):
     save_attempt_progress(
         attempt_id=attempt["id"],
         question_count=0,
-        transcript=ACTIVE_INTERVIEWS[user["id"]]["messages"],
+        transcript=[],
     )
 
     return {
