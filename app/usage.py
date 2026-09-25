@@ -45,6 +45,29 @@ TTS_PRICING = {
     }
 }
 
+REALTIME_PRICING_USD_PER_MILLION = {
+    "gpt-realtime-2.1": {
+        "text_input": 4.00,
+        "text_cached_input": 0.40,
+        "text_output": 24.00,
+        "audio_input": 32.00,
+        "audio_cached_input": 0.40,
+        "audio_output": 64.00,
+    },
+    "gpt-realtime-2.1-mini": {
+        "text_input": 0.60,
+        "text_cached_input": 0.06,
+        "text_output": 2.40,
+        "audio_input": 10.00,
+        "audio_cached_input": 0.30,
+        "audio_output": 20.00,
+    },
+}
+
+LIVE_TRANSCRIPTION_USD_PER_MINUTE = {
+    "gpt-live-transcribe": 0.017,
+}
+
 
 def new_usage() -> dict:
     return {
@@ -52,6 +75,24 @@ def new_usage() -> dict:
         "text": {
             "interviewer": _empty_text_component(),
             "evaluator": _empty_text_component(),
+        },
+        "realtime": {
+            "model": None,
+            "responses": 0,
+            "input_text_tokens": 0,
+            "input_audio_tokens": 0,
+            "cached_text_tokens": 0,
+            "cached_audio_tokens": 0,
+            "output_text_tokens": 0,
+            "output_audio_tokens": 0,
+            "estimated_cost_usd": 0.0,
+        },
+        "live_transcription": {
+            "model": None,
+            "calls": 0,
+            "audio_tokens": 0,
+            "estimated_seconds": 0.0,
+            "estimated_cost_usd": 0.0,
         },
         "audio": {
             "transcription": {
@@ -215,15 +256,102 @@ def add_tts_usage(total: dict, call_usage: dict):
     refresh_summary(total)
 
 
+def add_realtime_usage(total: dict, model: str, usage: dict):
+    component = total["realtime"]
+    component["model"] = model
+    component["responses"] += 1
+
+    input_details = usage.get("input_token_details", {}) or {}
+    cached_details = input_details.get("cached_tokens_details", {}) or {}
+    output_details = usage.get("output_token_details", {}) or {}
+
+    component["input_text_tokens"] += int(
+        input_details.get("text_tokens", 0) or 0
+    )
+    component["input_audio_tokens"] += int(
+        input_details.get("audio_tokens", 0) or 0
+    )
+    component["cached_text_tokens"] += int(
+        cached_details.get("text_tokens", 0) or 0
+    )
+    component["cached_audio_tokens"] += int(
+        cached_details.get("audio_tokens", 0) or 0
+    )
+    component["output_text_tokens"] += int(
+        output_details.get("text_tokens", 0) or 0
+    )
+    component["output_audio_tokens"] += int(
+        output_details.get("audio_tokens", 0) or 0
+    )
+
+    prices = REALTIME_PRICING_USD_PER_MILLION.get(model)
+    if prices:
+        ordinary_text = max(
+            0,
+            component["input_text_tokens"] - component["cached_text_tokens"],
+        )
+        ordinary_audio = max(
+            0,
+            component["input_audio_tokens"] - component["cached_audio_tokens"],
+        )
+        cost = (
+            ordinary_text * prices["text_input"]
+            + component["cached_text_tokens"] * prices["text_cached_input"]
+            + ordinary_audio * prices["audio_input"]
+            + component["cached_audio_tokens"] * prices["audio_cached_input"]
+            + component["output_text_tokens"] * prices["text_output"]
+            + component["output_audio_tokens"] * prices["audio_output"]
+        ) / 1_000_000
+        component["estimated_cost_usd"] = round(cost, 8)
+
+    refresh_summary(total)
+
+
+def add_live_transcription_usage(
+    total: dict,
+    model: str,
+    usage: dict | None,
+):
+    component = total["live_transcription"]
+    component["model"] = model
+    component["calls"] += 1
+
+    usage = usage or {}
+    input_details = usage.get("input_token_details", {}) or {}
+    audio_tokens = int(input_details.get("audio_tokens", 0) or 0)
+    component["audio_tokens"] += audio_tokens
+
+    # Realtime user audio is approximately one token per 100 ms.
+    estimated_seconds = audio_tokens * 0.1
+    component["estimated_seconds"] = round(
+        component["estimated_seconds"] + estimated_seconds,
+        3,
+    )
+
+    price = LIVE_TRANSCRIPTION_USD_PER_MINUTE.get(model, 0.0)
+    component["estimated_cost_usd"] = round(
+        component["estimated_seconds"] / 60 * price,
+        8,
+    )
+    refresh_summary(total)
+
+
 def refresh_summary(total: dict):
     interviewer = total["text"]["interviewer"]
     evaluator = total["text"]["evaluator"]
     transcription = total["audio"]["transcription"]
     tts = total["audio"]["tts"]
+    realtime = total["realtime"]
+    live_transcription = total["live_transcription"]
 
+    realtime_text_tokens = (
+        realtime["input_text_tokens"]
+        + realtime["output_text_tokens"]
+    )
     text_tokens = (
         interviewer["total_tokens"]
         + evaluator["total_tokens"]
+        + realtime_text_tokens
     )
 
     total_cost = (
@@ -231,6 +359,8 @@ def refresh_summary(total: dict):
         + evaluator["estimated_cost_usd"]
         + transcription["estimated_cost_usd"]
         + tts["estimated_cost_usd"]
+        + realtime["estimated_cost_usd"]
+        + live_transcription["estimated_cost_usd"]
     )
 
     total["summary"] = {
@@ -238,16 +368,25 @@ def refresh_summary(total: dict):
         "text_input_tokens": (
             interviewer["input_tokens"]
             + evaluator["input_tokens"]
+            + realtime["input_text_tokens"]
         ),
         "text_output_tokens": (
             interviewer["output_tokens"]
             + evaluator["output_tokens"]
+            + realtime["output_text_tokens"]
         ),
         "cached_input_tokens": (
             interviewer["cached_input_tokens"]
             + evaluator["cached_input_tokens"]
+            + realtime["cached_text_tokens"]
+            + realtime["cached_audio_tokens"]
         ),
-        "voice_input_seconds": transcription["seconds"],
+        "realtime_audio_input_tokens": realtime["input_audio_tokens"],
+        "realtime_audio_output_tokens": realtime["output_audio_tokens"],
+        "voice_input_seconds": (
+            transcription["seconds"]
+            + live_transcription["estimated_seconds"]
+        ),
         "estimated_tts_seconds": tts["estimated_audio_seconds"],
         "estimated_cost_usd": round(total_cost, 8),
         "currency": "USD",
