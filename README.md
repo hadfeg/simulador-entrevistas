@@ -4,7 +4,7 @@ Prototipo educativo para entrenar a estudiantes en entrevistas de levantamiento 
 
 ## Estado actual
 
-Rama de desarrollo: **v0.7 · Entrevista por voz (7A)**.
+Rama de desarrollo: **v0.8A · Videollamada con avatar de Carolina**.
 
 Esta versión incorpora autenticación local y persistencia de resultados.
 
@@ -288,3 +288,16 @@ Precios de referencia al 24-09-2026:
 - gpt-live-transcribe: USD 0.017 por minuto aproximado.
 
 El costo continúa mostrándose como estimación docente y no como factura.
+
+
+## Hito 8A · Videollamada con Carolina
+
+La entrevista Realtime se presenta como una videollamada.
+
+El estudiante ve su propia cámara en un recuadro y a Carolina en otro. Carolina usa un avatar ligero animado que refleja cuatro estados: esperando, escuchando, pensando y hablando. El movimiento de boca se activa mientras Realtime genera su respuesta.
+
+La cámara del estudiante es **solo local**: el navegador muestra la pista de video, pero únicamente la pista de audio se añade a la conexión WebRTC hacia Realtime. No se almacena ni se envía video a OpenAI.
+
+Si no existe webcam, la entrevista continúa con audio y se muestra un marcador visual en lugar de la cámara.
+
+El modo 7A por turnos y la entrada de texto permanecen disponibles como respaldo.
