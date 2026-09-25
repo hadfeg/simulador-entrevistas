@@ -677,9 +677,11 @@ function updateCameraUi() {
 
   studentVideo.classList.toggle("camera-off", !cameraEnabled);
   studentCameraPlaceholder.classList.toggle("hidden", cameraEnabled);
-  studentCameraState.textContent = cameraEnabled
-    ? "Cámara encendida"
-    : "Cámara apagada";
+  studentCameraState.textContent = !videoTrack
+    ? "Cámara no disponible"
+    : cameraEnabled
+      ? "Cámara encendida"
+      : "Cámara apagada";
 
   cameraToggle.disabled = !videoTrack;
   cameraToggle.textContent = cameraEnabled
@@ -714,7 +716,7 @@ function setRealtimeStatus(text, state = "idle") {
 function resetRealtimeSession() {
   cleanupRealtime();
   setRealtimeStatus(
-    "Conecta el micrófono y luego habla normalmente. Carolina detectará tus turnos y puedes interrumpirla.",
+    "Inicia la videollamada. Tu cámara se mostrará localmente y Carolina detectará tus turnos automáticamente.",
     "idle"
   );
   realtimeButton.disabled = false;
@@ -796,7 +798,7 @@ async function connectRealtime() {
   }
 
   realtimeButton.disabled = true;
-  setRealtimeStatus("Solicitando acceso al micrófono...", "connecting");
+  setRealtimeStatus("Solicitando acceso a cámara y micrófono...", "connecting");
 
   try {
     realtimePeer = new RTCPeerConnection();
@@ -1030,7 +1032,7 @@ function handleRealtimeEvent(messageEvent) {
         realtimeCloseResolver = null;
       }
       cleanupRealtime();
-      setRealtimeStatus("Conversación de voz finalizada.", "idle");
+      setRealtimeStatus("Videollamada finalizada.", "idle");
       break;
   }
 }
