@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Simulador de Entrevistas</title>
-  <link rel="stylesheet" href="/static/style.css?v=0.7.2">
+  <link rel="stylesheet" href="/static/style.css?v=0.7.3">
 </head>
 <body>
   <main class="container">
@@ -223,6 +223,34 @@
         <p id="summary"></p>
       </div>
 
+      <section id="usage-section" class="usage-section hidden">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">CONSUMO API</p>
+            <h3>Tokens y costo estimado</h3>
+          </div>
+          <strong id="usage-total-cost" class="usage-cost">USD $0</strong>
+        </div>
+
+        <div class="usage-metrics">
+          <div class="usage-metric">
+            <span id="usage-text-tokens">0</span>
+            <small>Tokens de texto</small>
+          </div>
+          <div class="usage-metric">
+            <span id="usage-voice-seconds">0 s</span>
+            <small>Audio del estudiante</small>
+          </div>
+          <div class="usage-metric">
+            <span id="usage-tts-seconds">0 s</span>
+            <small>Voz IA estimada</small>
+          </div>
+        </div>
+
+        <div id="usage-breakdown" class="usage-breakdown"></div>
+        <p id="usage-note" class="usage-note"></p>
+      </section>
+
       <h3>Evaluación por objetivo</h3>
       <div id="objective-results" class="objective-results"></div>
 
@@ -244,6 +272,6 @@
     </section>
   </main>
 
-  <script src="/static/app.js?v=0.7.2"></script>
+  <script src="/static/app.js?v=0.7.3"></script>
 </body>
 </html>
