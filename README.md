@@ -241,3 +241,50 @@ Los precios de referencia incorporados al prototipo corresponden al **24-09-2026
 El costo mostrado es una **estimación**, no una factura. Los tokens de los modelos Responses se obtienen del uso reportado por la API. La transcripción se estima usando la duración grabada y la voz TTS usa una aproximación de duración/tokens de audio.
 
 Los costos se muestran en el historial y en el detalle del intento solo para la profesora.
+
+
+## Hito 7B · Voz en tiempo real
+
+La rama `feature/voz-realtime` incorpora una conversación speech-to-speech mediante WebRTC y Realtime API.
+
+Flujo:
+
+```text
+Micrófono del estudiante
+        ↓
+WebRTC
+        ↓
+gpt-realtime-2.1
+        ↕
+voz de Carolina
+```
+
+Características:
+
+- no requiere pulsar un botón en cada turno;
+- usa detección semántica del fin de turno;
+- permite que el estudiante interrumpa a Carolina;
+- usa `gpt-live-transcribe` para conservar la transcripción;
+- la transcripción sigue alimentando al mismo evaluador pedagógico;
+- el modo 7A por turnos permanece disponible como respaldo;
+- la API key permanece exclusivamente en el backend.
+
+Configuración opcional:
+
+```text
+OPENAI_REALTIME_MODEL=gpt-realtime-2.1
+OPENAI_REALTIME_VOICE=marin
+OPENAI_LIVE_TRANSCRIBE_MODEL=gpt-live-transcribe
+```
+
+### Costos Realtime
+
+El sistema incorpora el consumo recibido en los eventos `response.done`.
+
+Precios de referencia al 24-09-2026:
+
+- gpt-realtime-2.1 texto: USD 4 / 1M entrada, USD 0.40 / 1M entrada en caché, USD 24 / 1M salida.
+- gpt-realtime-2.1 audio: USD 32 / 1M entrada, USD 0.40 / 1M entrada en caché, USD 64 / 1M salida.
+- gpt-live-transcribe: USD 0.017 por minuto aproximado.
+
+El costo continúa mostrándose como estimación docente y no como factura.
