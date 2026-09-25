@@ -5,6 +5,8 @@ import os
 from dotenv import load_dotenv
 from openai import OpenAI
 
+from .usage import response_usage
+
 ROOT = Path(__file__).resolve().parent.parent
 load_dotenv(ROOT / ".env")
 
@@ -75,7 +77,7 @@ Continúa la entrevista de forma coherente con todo el historial.
 """.strip()
 
 
-def generate_reply(case: dict, character: dict, history: list[dict], question: str) -> str:
+def generate_reply(case: dict, character: dict, history: list[dict], question: str) -> dict:
     api_key = os.getenv("OPENAI_API_KEY", "").strip()
     if not api_key:
         raise InterviewConfigurationError(
@@ -102,4 +104,7 @@ def generate_reply(case: dict, character: dict, history: list[dict], question: s
     if not answer:
         raise InterviewServiceError("La IA no devolvió una respuesta utilizable.")
 
-    return answer
+    return {
+        "text": answer,
+        "usage": response_usage(response, model),
+    }
