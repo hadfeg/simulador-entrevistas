@@ -112,7 +112,7 @@ def create_realtime_call(
     case: dict,
     character: dict,
     user_id: int,
-) -> str:
+) -> dict:
     if not sdp_offer.strip():
         raise RealtimeServiceError("La oferta WebRTC está vacía.")
 
@@ -151,7 +151,11 @@ def create_realtime_call(
                 "Realtime no devolvió una respuesta SDP válida."
             )
 
-        return response.text
+        return {
+            "sdp": response.text,
+            "model": session["model"],
+            "transcription_model": session["audio"]["input"]["transcription"]["model"],
+        }
     except RealtimeServiceError:
         raise
     except httpx.HTTPError as exc:
