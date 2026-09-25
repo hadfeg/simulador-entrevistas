@@ -73,6 +73,16 @@ El estudiante debe entrevistar personajes simulados, descubrir información rele
 - Mantener semantic VAD y capacidad de interrupción mientras las pruebas pedagógicas no indiquen lo contrario.
 - Informar en la interfaz que la voz del personaje es generada por inteligencia artificial.
 
+## Videollamada 8A
+
+- La cámara del estudiante es una vista local y no debe enviarse a OpenAI ni almacenarse.
+- En WebRTC Realtime solo se añade la pista de audio del estudiante.
+- La interfaz de videollamada debe reutilizar la misma sesión Realtime, transcripción, evaluación y costos existentes.
+- El avatar visual de Carolina es una representación de interfaz; no debe modificar las reglas del personaje.
+- Los estados visuales de Carolina deben derivarse de eventos reales de la conversación: esperando, escuchando, pensando y hablando.
+- Mantener el modo 7A por turnos como alternativa.
+- Si no hay webcam, permitir que la entrevista continúe por audio.
+
 ## Seguridad
 
 - Nunca guardar claves de API en el código.
