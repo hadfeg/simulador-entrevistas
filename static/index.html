@@ -4,12 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Simulador de Entrevistas</title>
-  <link rel="stylesheet" href="/static/style.css?v=0.7b.0">
+  <link rel="stylesheet" href="/static/style.css?v=0.8a.0">
 </head>
 <body>
   <main class="container">
     <header>
-      <p class="eyebrow">PROTOTIPO 0.7B · VOZ EN TIEMPO REAL</p>
+      <p class="eyebrow">HITO 8A · VIDEOLLAMADA CON CAROLINA</p>
       <h1>Simulador de Entrevistas</h1>
       <p class="subtitle">Entrenamiento de levantamiento de información</p>
     </header>
@@ -176,19 +176,68 @@
         <p id="interview-objective"></p>
       </div>
 
-      <div class="realtime-panel">
+      <section class="video-call-stage">
+        <article class="participant-tile student-tile">
+          <video id="student-video" autoplay muted playsinline></video>
+          <div id="student-camera-placeholder" class="camera-placeholder">
+            <span class="camera-placeholder-icon">👤</span>
+            <strong>Tu cámara</strong>
+            <small>La imagen se muestra solo en este dispositivo.</small>
+          </div>
+          <div class="participant-label">
+            <strong>Tú</strong>
+            <span id="student-camera-state">Cámara apagada</span>
+          </div>
+        </article>
+
+        <article id="carolina-tile" class="participant-tile carolina-tile state-idle">
+          <div class="carolina-scene">
+            <div id="carolina-avatar" class="carolina-avatar" aria-label="Avatar animado de Carolina">
+              <div class="avatar-hair-back"></div>
+              <div class="avatar-neck"></div>
+              <div class="avatar-body"></div>
+              <div class="avatar-head">
+                <div class="avatar-hair-front"></div>
+                <div class="avatar-brow brow-left"></div>
+                <div class="avatar-brow brow-right"></div>
+                <div class="avatar-eye eye-left"></div>
+                <div class="avatar-eye eye-right"></div>
+                <div class="avatar-nose"></div>
+                <div class="avatar-mouth"></div>
+              </div>
+            </div>
+            <div id="carolina-activity" class="carolina-activity">Carolina está esperando</div>
+          </div>
+          <div class="participant-label">
+            <strong>Carolina Morales</strong>
+            <span>Encargada de Bodega · RetailNova</span>
+          </div>
+        </article>
+      </section>
+
+      <div class="call-toolbar">
         <button id="realtime-button" class="realtime-button" type="button">
-          <span>🎧</span>
-          <span id="realtime-button-label">Iniciar conversación en vivo</span>
+          <span>📹</span>
+          <span id="realtime-button-label">Iniciar videollamada</span>
         </button>
-        <div class="realtime-info">
-          <strong>Voz en tiempo real</strong>
-          <span id="realtime-status" class="muted">Conecta el micrófono y luego habla normalmente. Carolina detectará tus turnos y puedes interrumpirla.</span>
-        </div>
+        <button id="camera-toggle" class="secondary" type="button" disabled>
+          Apagar cámara
+        </button>
         <span id="realtime-indicator" class="realtime-indicator">Desconectado</span>
       </div>
+
+      <div class="call-status">
+        <strong>Estado</strong>
+        <span id="realtime-status" class="muted">Inicia la videollamada. Carolina detectará tus turnos automáticamente y puedes interrumpirla.</span>
+      </div>
+
       <audio id="realtime-audio" autoplay></audio>
-      <p class="ai-voice-note">La voz de Carolina es generada por inteligencia artificial.</p>
+      <p class="ai-voice-note">La imagen de tu cámara permanece local. Solo el audio se envía al servicio de IA. La voz y el avatar de Carolina son generados por inteligencia artificial.</p>
+
+      <details class="interview-transcript-details">
+        <summary>Ver transcripción durante la entrevista</summary>
+        <div id="chat" class="chat compact-chat" aria-live="polite"></div>
+      </details>
 
       <details class="turn-mode-details">
         <summary>Usar modo por turnos (7A) como alternativa</summary>
@@ -208,9 +257,7 @@
         </div>
       </details>
 
-      <div id="chat" class="chat" aria-live="polite"></div>
-
-      <form id="question-form" class="composer">
+      <form id="question-form" class="composer fallback-composer">
         <label for="question">También puedes escribir tu pregunta</label>
         <div class="input-row">
           <input id="question" type="text" autocomplete="off" placeholder="Escribe tu pregunta o repregunta...">
@@ -288,6 +335,6 @@
     </section>
   </main>
 
-  <script src="/static/app.js?v=0.7b.0"></script>
+  <script src="/static/app.js?v=0.8a.0"></script>
 </body>
 </html>
